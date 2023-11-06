@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from . import dependancies, routers, db
+from . import dependencies, routers, db
 
 def setup_fastapi(): 
     app = FastAPI()

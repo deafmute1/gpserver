@@ -2,7 +2,7 @@
 name = "gpserver"
 version = "0.1.0"
 description = ""
-authors = ["Julian Syndercombe Steyn <yujisteyn@gmail.com>", "Violet Djeric <violet@def.au"]
+authors = ["Julian Syndercombe Steyn <yujisteyn@gmail.com>", "Violet Djeric <violet@def.au>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
