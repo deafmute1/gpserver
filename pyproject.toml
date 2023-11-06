@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gpserver"
+version = "0.1.0"
+description = ""
+authors = ["Julian Syndercombe Steyn <yujisteyn@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+fastapi = "^0.104.1"
+sqlalchemy = "^2.0.23"
+uvicorn = "^0.24.0.post1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+gpserver = 'gpserver.__main__:main'
