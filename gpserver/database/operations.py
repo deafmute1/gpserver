@@ -1,2 +1,2 @@
-from . import models, schemas
+from . import schema, models
 

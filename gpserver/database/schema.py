@@ -2,7 +2,7 @@ import datetime
 from enum import Enum
 from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
-from typing import Set
+from typing import Optional
 
 Base = DeclarativeBase
 
@@ -21,21 +21,28 @@ class Device(Base):
     id: Mapped[str] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
-
     user: Mapped["User"] = relationship(back_populates="devices")
     actions: Mapped[list["Action"]] = relationship(back_populates="device")
 
-
-class Tag(Base):
-    __tablename__ = 'tag'
-    tag: Mapped[str] = mapped_column(primary_key=True)
+    caption: Mapped[Optional[str]]
+    type: Mapped[Enum('type', ['desktop', 'laptop',
+                      'mobile', 'server', 'other'])]
+    subscriptions: Mapped[int]
 
 
 class Podcast(Base):
     __tablename__ = 'podcast'
     url: Mapped[str] = mapped_column(primary_key=True)
     episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
-    favourites: Mapped[set["Favourite"]] = relationship(back_populates="podcast")
+    favourites: Mapped[set["Favourite"]] = relationship(
+        back_populates="podcast")
+
+    website: Mapped[str]
+    description: Mapped[str]
+    subscribers: Mapped[int]
+    title: Mapped[str]
+    author: Mapped[str]
+    logo_url: Mapped[Optional[str]]
 
 
 class Episode(Base):
@@ -44,8 +51,14 @@ class Episode(Base):
     podcast_url: Mapped[str] = mapped_column(
         ForeignKey('podcast.url'), primary_key=True)
     podcast: Mapped["Podcast"] = relationship(back_populates="episodes")
-    
+
     actions: Mapped[list["Action"]] = relationship(back_populates="episode")
+
+    description: Mapped[Optional[str]]
+    released: Mapped[datetime.datetime]
+    # website:Mapped[str] - this might be the same as the media url.
+    # how do clients use it?
+    # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
 
 
 class Action(Base):
@@ -58,11 +71,6 @@ class Action(Base):
     episode_url: Mapped[str] = mapped_column(primary_key=True)
     episode: Mapped["Episode"] = relationship(back_populates="actions")
 
-    action: Mapped[Enum(
-        'action',
-        ['download', 'play', 'delete', 'new'])] = mapped_column(primary_key=True)
-    timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
-
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
                              ['user.username', 'device.id']),
@@ -70,14 +78,13 @@ class Action(Base):
                              'episode.podcast_url', 'episode.url'])
     )
 
-
-class PodcastList(Base):
-    __tablename__ = 'podcast_list'
-    username: Mapped[str] = mapped_column(
-        ForeignKey('user.username'), primary_key=True)
-    user: Mapped["User"] = relationship(back_populates="lists")
-    
-    name: Mapped[str] = mapped_column(primary_key=True)
+    action: Mapped[Enum(
+        'action',
+        ['download', 'play', 'delete', 'new'])] = mapped_column(primary_key=True)
+    timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    started: Mapped[Optional[int]]
+    position: Mapped[Optional[int]]
+    total: Mapped[Optional[int]]
 
 
 class Favourite(Base):
@@ -85,7 +92,22 @@ class Favourite(Base):
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="favourites")
-    
+
     podcast_url: Mapped[str] = mapped_column(
         ForeignKey('podcast.url'), primary_key=True)
     podcast: Mapped["Podcast"] = relationship(back_populates="favourites")
+
+# class Tag(Base):
+#     __tablename__ = 'tag'
+#     tag: Mapped[str] = mapped_column(primary_key=True)
+#     title: Mapped[Optional[str]]
+#     usage: Mapped[int]
+
+# class PodcastList(Base):
+#     __tablename__ = 'podcast_list'
+#     username: Mapped[str] = mapped_column(
+#         ForeignKey('user.username'), primary_key=True)
+#     user: Mapped["User"] = relationship(back_populates="lists")
+
+#     name: Mapped[str] = mapped_column(primary_key=True)
+#     title: Mapped[Optional[str]]
