@@ -37,9 +37,11 @@ def login(
 
 @router.post("/{username}/logout.json")
 def logout(
+        username: str,
         request: Request, 
         sessionid: Annotated[Union[str, None], Cookie()] = None 
     ): 
-        if not secrets.compare_digest(request.session.secret_key, sessionid): 
+        if (not secrets.compare_digest(request.session.secret_key, sessionid) 
+            or request.user != username): 
             return BadResponse 
         request.session.secret_key = None
