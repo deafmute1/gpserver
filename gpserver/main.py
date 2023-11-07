@@ -1,9 +1,11 @@
 import uvicorn
 from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
 from . import dependencies, routers, db
 
 def setup_fastapi(): 
     app = FastAPI()
+    app.add(SessionMiddleware)
     app.include_router(routers.auth) 
 
 def start_server(app: FastAPI):
