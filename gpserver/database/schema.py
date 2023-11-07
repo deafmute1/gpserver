@@ -12,10 +12,11 @@ class User(Base):
     username: Mapped[str] = mapped_column(primary_key=True)
     # TODO check if I can use set rather than Set - not sure it'll work
     devices: Mapped[set["Device"]] = relationship(back_populates="user")
+
     favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
     lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
 
-
+DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
 class Device(Base):
     __tablename__ = 'device'
     id: Mapped[str] = mapped_column(primary_key=True)
@@ -25,8 +26,7 @@ class Device(Base):
     actions: Mapped[list["Action"]] = relationship(back_populates="device")
 
     caption: Mapped[Optional[str]]
-    type: Mapped[Enum('type', ['desktop', 'laptop',
-                      'mobile', 'server', 'other'])]
+    type: Mapped[DeviceType]
     subscriptions: Mapped[int]
 
 
@@ -60,7 +60,7 @@ class Episode(Base):
     # how do clients use it?
     # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
 
-
+ActionTypes = Enum('action',['download', 'play', 'delete', 'new'])
 class Action(Base):
     __tablename__ = 'action'
     username: Mapped[str] = mapped_column(primary_key=True)
@@ -78,9 +78,7 @@ class Action(Base):
                              'episode.podcast_url', 'episode.url'])
     )
 
-    action: Mapped[Enum(
-        'action',
-        ['download', 'play', 'delete', 'new'])] = mapped_column(primary_key=True)
+    action: Mapped[ActionTypes] = mapped_column(primary_key=True)
     timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
     started: Mapped[Optional[int]]
     position: Mapped[Optional[int]]
