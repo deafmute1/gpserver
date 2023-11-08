@@ -21,7 +21,7 @@ def get_user(db:Session, username:str) -> schema.User:
 
 def delete_user(db:Session, username:str):
     with db.begin():    
-        db.delete(get_user(username))
+        db.delete(get_user(db, username))
 
 # Session
 def create_session(db:Session, session: models.SessionTokenTimestamp) -> schema.Session:
@@ -41,4 +41,4 @@ def get_session(db: Session, session: models.SessionToken) -> schema.Session:
     
 def delete_session(db: Session, session: models.SessionToken):
     with db.begin(): 
-        db.delete(get_session(session))
+        db.delete(get_session(db, session))
