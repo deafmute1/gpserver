@@ -13,10 +13,15 @@ class User(Base):
     # TODO check if I can use set rather than Set - not sure it'll work
     devices: Mapped[set["Device"]] = relationship(back_populates="user")
 
-    favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
-    lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
+    # favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
+    # lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
+    password_hash: Mapped[str]
+    password_salt: Mapped[str]
+
 
 DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
+
+
 class Device(Base):
     __tablename__ = 'device'
     id: Mapped[str] = mapped_column(primary_key=True)
@@ -27,15 +32,16 @@ class Device(Base):
 
     caption: Mapped[Optional[str]]
     type: Mapped[DeviceType]
-    subscriptions: Mapped[int]
+    subscriptions: Mapped["Subscription"] = relationship(
+        back_populates="device")
 
 
 class Podcast(Base):
     __tablename__ = 'podcast'
     url: Mapped[str] = mapped_column(primary_key=True)
     episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
-    favourites: Mapped[set["Favourite"]] = relationship(
-        back_populates="podcast")
+    # favourites: Mapped[set["Favourite"]] = relationship(
+    #     back_populates="podcast")
 
     website: Mapped[str]
     description: Mapped[str]
@@ -43,6 +49,8 @@ class Podcast(Base):
     title: Mapped[str]
     author: Mapped[str]
     logo_url: Mapped[Optional[str]]
+    
+    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
 
 
 class Episode(Base):
@@ -60,7 +68,27 @@ class Episode(Base):
     # how do clients use it?
     # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
 
-ActionTypes = Enum('action',['download', 'play', 'delete', 'new'])
+
+class Subscription(Base):
+    __tablename__ = 'subscription'
+    username: Mapped[str] = mapped_column(primary_key=True)
+    device_id: Mapped[str] = mapped_column(primary_key=True)
+    device: Mapped["Device"] = relationship(back_populates="subscriptions")
+    __table_args__ = (
+        ForeignKeyConstraint(['username', 'device_id'],
+                             ['device.username', 'device.id'])
+    )
+
+    podcast_url: Mapped[str] = mapped_column(
+        ForeignKey('podcast.url'), primary_key=True)
+    podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
+    
+    timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+
+
+ActionType = Enum('action', ['download', 'play', 'delete', 'new'])
+
+
 class Action(Base):
     __tablename__ = 'action'
     username: Mapped[str] = mapped_column(primary_key=True)
@@ -73,27 +101,27 @@ class Action(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
-                             ['user.username', 'device.id']),
+                             ['device.username', 'device.id']),
         ForeignKeyConstraint(['podcast_url', 'episode_url'], [
                              'episode.podcast_url', 'episode.url'])
     )
 
-    action: Mapped[ActionTypes] = mapped_column(primary_key=True)
+    action: Mapped[ActionType] = mapped_column(primary_key=True)
     timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
     started: Mapped[Optional[int]]
     position: Mapped[Optional[int]]
     total: Mapped[Optional[int]]
 
 
-class Favourite(Base):
-    __tablename__ = 'favourite'
-    username: Mapped[str] = mapped_column(
-        ForeignKey('user.username'), primary_key=True)
-    user: Mapped["User"] = relationship(back_populates="favourites")
+# class Favourite(Base): moved to boolean value in subscriptions
+#     __tablename__ = 'favourite'
+#     username: Mapped[str] = mapped_column(
+#         ForeignKey('user.username'), primary_key=True)
+#     user: Mapped["User"] = relationship(back_populates="favourites")
 
-    podcast_url: Mapped[str] = mapped_column(
-        ForeignKey('podcast.url'), primary_key=True)
-    podcast: Mapped["Podcast"] = relationship(back_populates="favourites")
+#     podcast_url: Mapped[str] = mapped_column(
+#         ForeignKey('podcast.url'), primary_key=True)
+#     podcast: Mapped["Podcast"] = relationship(back_populates="favourites")
 
 # class Tag(Base):
 #     __tablename__ = 'tag'
