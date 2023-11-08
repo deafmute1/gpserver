@@ -27,7 +27,7 @@ def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db
         operations.delete_session(db, token)
         raise HTTPException(
             401, 
-            "sessionid cookie timed out; please login again", 
+            "sessionid cookie expired; please login again", 
             {"WWW-Authenticate": "Basic"}
         )
 AuthHint = Annotated[None, Depends(auth_user)]
