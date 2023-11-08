@@ -1,12 +1,14 @@
 import base64
 import secrets
 from typing import Annotated, Union
-from fastapi import APIRouter, Depends, Cookie, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, 
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from passlib.hash import bcrypt
 
 import time
-from database import operations, models
+from ..database import operations, models, schema
+from .. import dependencies
+from ..dependencies import StatusResponses
 
 router = APIRouter(
     prefix="/api/2/auth",
@@ -15,9 +17,6 @@ router = APIRouter(
 
 HTTPBasicAuth = HTTPBasic()
 
-BadResponse =JSONResponse(status_code=status.HTTP_400_BAD_REQUEST) 
-NoAuthResponse =JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED) 
-
 @router.post("/{username}/login.json")
 def login(
         credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasicAuth)],
@@ -25,15 +24,16 @@ def login(
         sessionid: Annotated[Union[str, None], Cookie()] = None
     ):
         if sessionid is None: 
-            user: models.User = operations.get_user(credentials.username)
-            if secrets.compare_digest(user.password, credentials.password):
+            user: schema.User = operations.get_user(credentials.username)
+            if bcrypt.verify(user.password_hash, credentials.password):
                 request.user = credentials.username
-                request.session.session_cookie = "sessionid"
-                request.session.secret_key = base64.b64encode(time.time()) + secrets.token_urlsafe()
+                request.session['session_cookie'] = "sessionid"
+                request.session['secret_key'] = base64.b64encode(time.time()) + secrets.token_urlsafe()
             else:
-                return NoAuthResponse
-        elif not secrets.compare_digest(request.session.secret_key, sessionid): 
-            return BadResponse
+                raise HTTPException(401,"Invalid Credentials") 
+        elif not secrets.compare_digest(request.session['secret_key'], sessionid): 
+            raise HTTPException(400, "sessionid cookie does not authneticate this user")
+        return
 
 @router.post("/{username}/logout.json")
 def logout(
@@ -43,5 +43,5 @@ def logout(
     ): 
         if (not secrets.compare_digest(request.session.secret_key, sessionid) 
             or request.user != username): 
-            return BadResponse 
+            raise HTTPException(400, "sessionid cookie does not match user")
         request.session.secret_key = None

@@ -1,11 +1,16 @@
-from database import connection as database
+from datetime import datetime
+from secrets import compare_digest
+from fastapi import Request, status
+from .database import connection 
+
+## Dependencies
 
 def get_db():
-    db = database.SessionLocal()
+    db = connection.SessionLocal()
     try:
         yield db
     finally:
         db.close()
         
-def check_auth(): 
+def check_auth(request: Request): 
     pass

@@ -4,8 +4,8 @@ from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from typing import Optional
 
-Base = DeclarativeBase
-
+class Base(DeclarativeBase): 
+    pass
 
 class User(Base):
     __tablename__ = 'user'
@@ -16,7 +16,6 @@ class User(Base):
     # favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
     # lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
     password_hash: Mapped[str]
-    password_salt: Mapped[str]
 
 
 DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
@@ -76,7 +75,7 @@ class Subscription(Base):
     device: Mapped["Device"] = relationship(back_populates="subscriptions")
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
-                             ['device.username', 'device.id'])
+                             ['device.username', 'device.id']),
     )
 
     podcast_url: Mapped[str] = mapped_column(

@@ -11,9 +11,7 @@ class User(BaseModel):
 
 
 class UserCreate(User):
-    password_hash: str
-    password_salt: str
-
+    password: str
 
 class Device(BaseModel):
     id: str
