@@ -38,12 +38,13 @@ def login(
                 headers= {"WWW-Authenticate": "Basic"}
             )
             
-        operations.set_session(db, models.SessionTokenTimestamp(
+        operations.create_session(db, models.SessionTokenTimestamp(
             key=base64.b64encode(datetime.now()) + secrets.token_urlsafe(),
             username=user.username,
             created=datetime.now()
         ))
-    else: 
+    else:
+        # check if given cookie is valid
         session: schema.Session = operations.get_session(models.SessionToken(sessionid, username))
         if not secrets.compare_digest(sessionid, session.key):
             raise HTTPException(400, "sessionid cookie does not authenticate this user")

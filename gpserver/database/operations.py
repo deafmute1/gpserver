@@ -1,10 +1,8 @@
 from . import schema, models
 
 from passlib.hash import bcrypt
-from datetime import datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import delete
 
 
 # User
@@ -21,12 +19,12 @@ def create_user(db: Session, user: models.UserCreate) -> schema.User:
 def get_user(db:Session, username:str) -> schema.User:
     return db.get(schema.User,username)
 
-def remove_user(db:Session, username:str):
+def delete_user(db:Session, username:str):
     with db.begin():    
         db.delete(get_user(username))
 
 # Session
-def set_session(db:Session, session: models.SessionTokenTimestamp) -> schema.Session:
+def create_session(db:Session, session: models.SessionTokenTimestamp) -> schema.Session:
     session: schema.Session(
         key=session.key,
         username=session.username,
