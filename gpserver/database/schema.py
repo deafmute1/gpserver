@@ -4,14 +4,17 @@ from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from typing import Optional
 
-class Base(DeclarativeBase): 
+
+class Base(DeclarativeBase):
     pass
+
 
 class User(Base):
     __tablename__ = 'user'
     username: Mapped[str] = mapped_column(primary_key=True)
     # TODO check if I can use set rather than Set - not sure it'll work
     devices: Mapped[set["Device"]] = relationship(back_populates="user")
+    sessions: Mapped[set["Device"]] = relationship(back_populates="user")
 
     # favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
     # lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
@@ -35,6 +38,14 @@ class Device(Base):
         back_populates="device")
 
 
+class Session(Base):
+    __tablename__ = 'session'
+    key: Mapped[str] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(ForeignKey('user.username'))
+    user: Mapped["User"] = relationship(back_populates="sessions")
+    datetime_created: Mapped[datetime.datetime]
+
+
 class Podcast(Base):
     __tablename__ = 'podcast'
     url: Mapped[str] = mapped_column(primary_key=True)
@@ -48,8 +59,9 @@ class Podcast(Base):
     title: Mapped[str]
     author: Mapped[str]
     logo_url: Mapped[Optional[str]]
-    
-    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
+
+    subscriptions: Mapped[set["Subscription"]
+                          ] = relationship(back_populates="podcast")
 
 
 class Episode(Base):
@@ -81,7 +93,7 @@ class Subscription(Base):
     podcast_url: Mapped[str] = mapped_column(
         ForeignKey('podcast.url'), primary_key=True)
     podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
-    
+
     timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
 
 
