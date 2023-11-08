@@ -6,8 +6,7 @@ from fastapi import FastAPI
 from . import database, dependencies
 from .routers import auth
 
-
-def Constants(Enum):
+class Constants(Enum):
     SESSIONID_TIMEOUT_HOURS: int = int(environ.get('SESSIONID_TIMEOUT_HOURS', 120))
 
 def setup_fastapi(): 

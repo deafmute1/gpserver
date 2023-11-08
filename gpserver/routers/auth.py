@@ -1,7 +1,7 @@
 import base64
 import secrets
 from typing import Annotated, Union
-from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, 
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Request 
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.hash import bcrypt
 from sqlalchemy.orm import Session
