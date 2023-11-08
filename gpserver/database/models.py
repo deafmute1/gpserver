@@ -8,7 +8,6 @@ class BaseModelORM(BaseModel):
 class SessionToken(BaseModelORM):
     key: bytes
     username: str
-    
 
 class SessionTokenTimestamp(SessionToken):
     created: datetime.datetime
@@ -46,8 +45,6 @@ class Subscription(BaseModelORM):
     device_id: str
     podcast_url:str
     timestamp: datetime.datetime
-    class Config:
-        orm_mode = True
 
 class Action(BaseModelORM):
     username: str

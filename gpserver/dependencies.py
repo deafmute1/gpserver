@@ -3,7 +3,7 @@ from secrets import compare_digest
 from typing import Annotated, Union
 from fastapi import Cookie, Depends, HTTPException, Request
 from .database import connection, operations,models
-from .main import Constants
+from . import const
 from sqlalchemy.orm import Session
 
 # Type Hint Aliases
@@ -23,7 +23,7 @@ def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db
         or compare_digest(token.key, sessionid), 
     ):
         raise HTTPException(401, "Invalid Credentials", {"WWW-Authenticate": "Basic"})
-    if (datetime.now() - token.created).days >= Constants.SESSIONID_TIMEOUT_HOURS:
+    if (datetime.now() - token.created).days >= const.SESSIONID_TIMEOUT_HOURS:
         operations.delete_session(db, token)
         raise HTTPException(
             401, 
