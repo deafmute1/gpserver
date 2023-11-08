@@ -1,8 +1,14 @@
+from enum import Enum
+from os import environ
+
 import uvicorn
 from fastapi import FastAPI
 from . import database, dependencies
 from .routers import auth
 
+
+def Constants(Enum):
+    SESSIONID_TIMEOUT_HOURS: int = int(environ.get('SESSIONID_TIMEOUT_HOURS', 120))
 
 def setup_fastapi(): 
     app = FastAPI()

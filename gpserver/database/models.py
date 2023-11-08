@@ -2,29 +2,31 @@ from pydantic import BaseModel
 from .schema import DeviceType, ActionType
 import datetime
 
+class BaseModelORM(BaseModel):
+    model_config = { 'orm_mode' : True }
 
-class User(BaseModel):
+class SessionToken(BaseModelORM):
+    key: bytes
     username: str
+    
 
-    class Config:
-        orm_mode = True
+class SessionTokenTimestamp(SessionToken):
+    created: datetime.datetime
 
+class User(BaseModelORM):
+    username: str
 
 class UserCreate(User):
     password: str
 
-class Device(BaseModel):
+class Device(BaseModelORM):
     id: str
     username: str
     caption: str
     type: DeviceType
     subscriptions: int
 
-    class Config:
-        orm_mode = True
-
-
-class Podcast(BaseModel):
+class Podcast(BaseModelORM):
     url: str
     website: str
     description: str
@@ -33,20 +35,13 @@ class Podcast(BaseModel):
     author: str
     logo_url: str
 
-    class Config:
-        orm_mode = True
-
-
-class Episode(BaseModel):
+class Episode(BaseModelORM):
     url: str
     podcast_url: str
     description: str
     released: datetime.datetime
 
-    class Config:
-        orm_mode = True
-
-class Subscription(BaseModel):
+class Subscription(BaseModelORM):
     username:str
     device_id: str
     podcast_url:str
@@ -54,7 +49,7 @@ class Subscription(BaseModel):
     class Config:
         orm_mode = True
 
-class Action(BaseModel):
+class Action(BaseModelORM):
     username: str
     device_id: str
     podcast_url: str
@@ -62,19 +57,12 @@ class Action(BaseModel):
     action: ActionType
     timestamp: datetime.datetime
 
-    class Config:
-        orm_mode = True
-
 
 class ActionPlay(Action):
     started: int
     position: int
     total: int
 
-
-class Favourite(BaseModel):
+class Favourite(BaseModelORM):
     username: str
     podcast_url: str
-
-    class Config:
-        orm_mode = True

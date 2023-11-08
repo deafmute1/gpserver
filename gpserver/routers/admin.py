@@ -6,6 +6,8 @@ router = APIRouter(
     tags=["admin"],
 ) 
 
+# enforce utf8 on usernames
+
 @router.post("/create-user")
 def create_user(
     

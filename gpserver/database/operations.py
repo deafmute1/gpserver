@@ -1,13 +1,16 @@
 from . import schema, models
-from .connection import engine
+
 from passlib.hash import bcrypt
+from datetime import datetime
 
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 
 
-def create_user(db: Session, user: models.UserCreate):
+# User
+def set_user(db: Session, user: models.UserCreate) -> schema.User:
     user = schema.User(
-        username=user.username,
+        username=user.username.encode('utf8'),
         password_hash=bcrypt(user.password),
     )
     with db.begin():
@@ -15,11 +18,29 @@ def create_user(db: Session, user: models.UserCreate):
     db.refresh(user)
     return user
 
-def get_user(db:Session, username:str):
+def get_user(db:Session, username:str) -> schema.User:
     return db.get(schema.User,username)
 
-def remove_user(db:Session,username:str):
+def delete_session(db:Session, username:str) -> schema.User:
     with db.begin():    
-        db.delete(username)
-        
+        db.delete(get_user(username))
 
+# Session
+def set_session(db:Session, session: models.SessionTokenTimestamp) -> schema.Session:
+    session: schema.Session(
+        key=session.key,
+        username=session.username,
+        created=session.created
+    )
+    with db.begin(): 
+        db.add(session)
+    db.refresh()
+
+def get_session(db: Session, session: models.SessionToken) -> schema.Session:
+    db.get(
+        schema.Session, { "key": session.key, "username": session.username }
+    )
+    
+def delete_session(db: Session, session: models.SessionTokenTimestamp) :
+    with db.begin(): 
+        db.delete(get_session(session))
