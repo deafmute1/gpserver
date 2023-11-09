@@ -30,4 +30,5 @@ def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db
             "sessionid cookie expired; please login again", 
             {"WWW-Authenticate": "Basic"}
         )
+    return username
 AuthHint = Annotated[None, Depends(auth_user)]

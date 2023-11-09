@@ -14,11 +14,11 @@ class User(Base):
     username: Mapped[str] = mapped_column(primary_key=True)
     # TODO check if I can use set rather than Set - not sure it'll work
     devices: Mapped[set["Device"]] = relationship(back_populates="user")
-    sessions: Mapped[set["Device"]] = relationship(back_populates="user")
+    sessions: Mapped[list["Session"]] = relationship(back_populates="user")
 
     # favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
     # lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
-    password_hash: Mapped[str]
+    password_hash: Mapped[str] = mapped_column()
 
 
 DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])

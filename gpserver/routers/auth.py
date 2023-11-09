@@ -26,7 +26,7 @@ def login(
     ):
     if sessionid is None:
         # log user in 
-        user: schema.User = operations.get_user(credentials.username)
+        user: schema.User = operations.get_user(db, credentials.username)
         
         if not ( 
             bcrypt.verify(user.password_hash, credentials.password)

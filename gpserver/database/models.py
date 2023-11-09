@@ -5,6 +5,8 @@ import datetime
 class BaseModelORM(BaseModel):
     model_config = { 'orm_mode' : True }
 
+
+## Session
 class SessionToken(BaseModelORM):
     key: bytes
     username: str
@@ -12,12 +14,15 @@ class SessionToken(BaseModelORM):
 class SessionTokenTimestamp(SessionToken):
     created: datetime.datetime
 
+## User
 class User(BaseModelORM):
-    username: str
+    username: bytes
+    password: str | bytes | None = None
 
 class UserCreate(User):
-    password: str
+    password: str | bytes
 
+## 
 class Device(BaseModelORM):
     id: str
     username: str
@@ -46,6 +51,7 @@ class Subscription(BaseModelORM):
     podcast_url:str
     timestamp: datetime.datetime
 
+## Action
 class Action(BaseModelORM):
     username: str
     device_id: str
@@ -54,12 +60,12 @@ class Action(BaseModelORM):
     action: ActionType
     timestamp: datetime.datetime
 
-
 class ActionPlay(Action):
     started: int
     position: int
     total: int
 
+##
 class Favourite(BaseModelORM):
     username: str
     podcast_url: str
