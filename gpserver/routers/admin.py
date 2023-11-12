@@ -8,8 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 router = APIRouter(
-    prefix="/api/admin",
-    tags=["admin"],
+    tags=["admin"]
 ) 
 
 class UserList(BaseModel): 

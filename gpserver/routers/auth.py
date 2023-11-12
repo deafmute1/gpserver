@@ -11,8 +11,7 @@ from ..database import operations, models
 from .. import dependencies
 
 router = APIRouter(
-    prefix="/api/2/auth",
-    tags=["auth"],
+    tags=["auth"]
 )
 
 auth_scheme = HTTPBasic()
