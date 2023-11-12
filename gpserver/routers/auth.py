@@ -1,14 +1,13 @@
 import base64
 import secrets
 from typing import Annotated, Union
-from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from const import hasher
 from sqlalchemy.orm import Session
 
 from datetime import datetime
-from ..database import operations, models, schema
+from ..database import operations, models
 from .. import dependencies
 
 router = APIRouter(

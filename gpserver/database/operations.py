@@ -1,11 +1,10 @@
-from dataclasses import dataclass
 from sqlalchemy import select, update
 from . import schema, models
 from typing import Any, NamedTuple
 from const import hasher
 from collections.abc import Sequence, Mapping
 
-from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm import Session
 
 # User
 

@@ -1,7 +1,6 @@
 from datetime import datetime
-from secrets import compare_digest
 from typing import Annotated, Union
-from fastapi import Cookie, Depends, HTTPException, Request
+from fastapi import Cookie, Depends, HTTPException
 from .database import connection, operations,models
 from . import const
 from sqlalchemy.orm import Session
