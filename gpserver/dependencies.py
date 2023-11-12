@@ -20,7 +20,7 @@ def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db
     token = operations.get_session(db, models.SessionTokenTimestamp)
     if not (
         compare_digest(token.username, username.encode('utf8'))
-        or compare_digest(token.key, sessionid), 
+        or compare_digest(token.key, sessionid)
     ):
         raise HTTPException(401, "Invalid Credentials", {"WWW-Authenticate": "Basic"})
     if (datetime.now() - token.created).days >= const.SESSIONID_TIMEOUT_HOURS:

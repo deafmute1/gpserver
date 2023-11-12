@@ -3,7 +3,7 @@ import secrets
 from typing import Annotated, Union
 from fastapi import APIRouter, Depends, Cookie, HTTPException, Request 
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from passlib.hash import bcrypt
+from const import hasher
 from sqlalchemy.orm import Session
 
 from datetime import datetime
@@ -29,7 +29,7 @@ def login(
         user: schema.User = operations.get_user(db, credentials.username)
         
         if not ( 
-            bcrypt.verify(user.password_hash, credentials.password)
+            hasher.verify(user.password_hash, credentials.password)
             or secrets.compare_digest(credentials.username, username)
         ):
             raise HTTPException(

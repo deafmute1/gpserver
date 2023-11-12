@@ -17,7 +17,6 @@ class SessionTokenTimestamp(SessionToken):
 ## User
 class User(BaseModelORM):
     username: bytes
-    password: str | bytes | None = None
 
 class UserCreate(User):
     password: str | bytes

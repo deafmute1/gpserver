@@ -18,7 +18,7 @@ class User(Base):
 
     # favourites: Mapped[set["Favourite"]] = relationship(back_populates="user")
     # lists: Mapped[set["PodcastList"]] = relationship(back_populates="user")
-    password_hash: Mapped[str] = mapped_column()
+    password_hash: Mapped[str]
 
 
 DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
@@ -41,7 +41,8 @@ class Device(Base):
 class Session(Base):
     __tablename__ = 'session'
     key: Mapped[str] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(ForeignKey('user.username'), primary_key=True)
+    username: Mapped[str] = mapped_column(
+        ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="sessions")
     created: Mapped[datetime.datetime]
 
@@ -60,8 +61,7 @@ class Podcast(Base):
     author: Mapped[str]
     logo_url: Mapped[Optional[str]]
 
-    subscriptions: Mapped[set["Subscription"]
-                          ] = relationship(back_populates="podcast")
+    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
 
 
 class Episode(Base):
