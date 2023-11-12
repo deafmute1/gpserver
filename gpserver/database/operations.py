@@ -50,7 +50,7 @@ def delete_user(db: Session, user: schema.User):
 
 def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema.Session:
     session: schema.Session(
-        key=session.key,
+        key_hash=hasher.hash(session.key),
         username=session.username,
         created=session.created
     )
@@ -61,7 +61,7 @@ def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema
 
 def get_session(db: Session, session: models.SessionToken) -> schema.Session:
     db.get(
-        schema.Session, {"key": session.key, "username": session.username}
+        schema.Session, {"key_hash": hasher.hash(session.key), "username": session.username}
     )
 
 
