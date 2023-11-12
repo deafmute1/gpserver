@@ -1,7 +1,8 @@
 import base64
 import secrets
 from typing import Annotated, Union
-from fastapi import APIRouter, Depends, Cookie, HTTPException, Request 
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from const import hasher
 from sqlalchemy.orm import Session
@@ -13,56 +14,52 @@ from .. import dependencies
 router = APIRouter(
     prefix="/api/2/auth",
     tags=["auth"],
-) 
+)
 
 auth_scheme = HTTPBasic()
 
+
 @router.post("/{username}/login.json")
 def login(
-        username: str,
-        credentials: Annotated[HTTPBasicCredentials, Depends(auth_scheme)],
-        db: Session = Depends(dependencies.get_db),
-        sessionid: dependencies.CookieHint = None
-    ):
-    if sessionid is None:
-        # log user in 
-        user: schema.User = operations.get_user(db, credentials.username)
-        
-        if not ( 
-            hasher.verify(user.password_hash, credentials.password)
-            or secrets.compare_digest(credentials.username, username)
-        ):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid Credentials", 
-                headers= {"WWW-Authenticate": "Basic"}
-            )
-            
-        operations.create_session(db, models.SessionTokenTimestamp(
-            key=base64.b64encode(datetime.now()) + secrets.token_urlsafe(),
-            username=user.username,
-            created=datetime.now()
-        ))
+    response: Response,
+    username: str,
+    credentials: Annotated[HTTPBasicCredentials, Depends(auth_scheme)],
+    db: Session = Depends(dependencies.get_db),
+    sessionid: dependencies.CookieHint = None
+):
+    content = {'Username': username}
+    if (user := operations.get_user(db, username)) is not None:
+        if sessionid is not None:
+            dependencies.auth_user(username, sessionid)
+            content['Authenticated'] = True
+        else:
+            if not hasher.verify(credentials.password, user.password_hash):
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid Credentials",
+                    headers={"WWW-Authenticate": "Basic"}
+                )
+            sessionid = base64.b64encode(
+                datetime.now()) + secrets.token_urlsafe()
+            response.set_cookie("sessionid", sessionid)
+            operations.create_session(db, models.SessionTokenTimestamp(
+                key=sessionid,
+                username=username,
+                created=datetime.now()))
+            content['Authenticated'] = True
     else:
-        # check if given cookie is valid
-        session: schema.Session = operations.get_session(models.SessionToken(sessionid, username))
-        if not secrets.compare_digest(sessionid, session.key):
-            raise HTTPException(400, "sessionid cookie does not authenticate this user")
-    return {"Username": credentials.username, "Authenticated": True}
+        content['User'] = False
+    return content
+
 
 @router.post("/{username}/logout.json")
 def logout(
-        username: str,
-        db: Session = Depends(dependencies.get_db),       
-        sessionid: Annotated[Union[str, None], Cookie()] = None 
-    ): 
-    session = operations.get_session(models.SessionToken(sessionid, username))
-    
-    if not (
-        secrets.compare_digest(username, session.username)
-        or secrets.compare_digest(sessionid, session.key)
-    ):
+    username: str,
+    db: Session = Depends(dependencies.get_db),
+    sessionid: Annotated[Union[str, None], Cookie()] = None
+):
+    if (session := operations.get_session(models.SessionToken(sessionid, username))) is None:
         raise HTTPException(400, "sessionid cookie does not authenticate user")
-    
-    operations.delete_session(db, models.SessionToken(sessionid, ))
+
+    operations.delete_session(db, session)
     return {"Username": username, "Authenticated": False}

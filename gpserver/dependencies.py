@@ -17,18 +17,15 @@ def get_db():
         db.close()
 
 def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db)): 
-    token = operations.get_session(db, models.SessionTokenTimestamp)
-    if not (
-        compare_digest(token.username, username.encode('utf8'))
-        or compare_digest(token.key, sessionid)
-    ):
-        raise HTTPException(401, "Invalid Credentials", {"WWW-Authenticate": "Basic"})
-    if (datetime.now() - token.created).days >= const.SESSIONID_TIMEOUT_HOURS:
-        operations.delete_session(db, token)
-        raise HTTPException(
-            401, 
-            "sessionid cookie expired; please login again", 
-            {"WWW-Authenticate": "Basic"}
+    if (session := operations.get_session(db,models.SessionToken(username=username,key=sessionid))) is not None:
+        #check time
+        if (datetime.now() - session.created) < const.SESSIONID_TIMEOUT_HOURS:
+            return username
+        else:
+            operations.delete_session(db,session)
+    raise HTTPException(
+        401,
+        "sessionid does not authenticate this user; please login again", 
+        {"WWW-Authenticate": "Basic"}
         )
-    return username
-AuthHint = Annotated[None, Depends(auth_user)]
+AuthHint = Annotated[str, Depends(auth_user)]
