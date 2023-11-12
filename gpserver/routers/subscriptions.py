@@ -15,6 +15,8 @@ router_v2 = APIRouter(
 )
 
 # namespace issue with using 'format' - format is a reserved word.
+
+
 @router_v1.get("/{username}/{deviceid}.{fmt}")
 def get_device_subscriptions(
     response: Response,
@@ -24,7 +26,7 @@ def get_device_subscriptions(
     jsonp: Annotated[[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    pass
+    subscriptions = operations.get_subscriptions(db, username, deviceid)
 
 
 @router_v1.get("/{username}.{fmt}")
@@ -35,7 +37,7 @@ def get_subscriptions(
     jsonp: Annotated[[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    pass
+    subscriptions = operations.get_subscriptions(db, username)
 
 
 @router_v1.put("/{username}/{deviceid}.{fmt}")
@@ -64,16 +66,22 @@ def upload_device_subscription_changes(
     db: Session = Depends(dependencies.get_db)
 ):
     # need to read source code to figure out what actual data is being returned - weirdly formed and formatted in docs.
-    pass
+    #format is:
+    content = {
+        'add':[],
+        'remove':[],
+        'timestamp':0
+    }
 
 
-@router_v2.post("/{username}/{deviceid}.json")
+@router_v2.post("/{username}/{_}.json")
+@router_v2.post("/{username}.json")
 def get_device_subscription_changes(
     username: str,
-    deviceid: str,
     since: Annotated[datetime.datetime, Query()] = 0,
     db: Session = Depends(dependencies.get_db)
 ):
+    # deviceid doesn't matter here. or most places
     # notes from docs:
     # 'since' value SHOULD be timestamp value from the previous call to this API endpoint. If there has been no previous call, the cliend SHOULD use 0.
     # The response format is the same as the upload format: A dictionary with two keys “add” and “remove” where the value for each key is a list of URLs that should be added or removed. The timestamp SHOULD be stored by the client in order to provide it in the since parameter in the next request.

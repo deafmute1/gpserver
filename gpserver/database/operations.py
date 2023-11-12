@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 class ColumnFilters(NamedTuple):
     user: list[schema.User] = [schema.User.username]
+    subscription: list[schema.SubscriptionAction] = [schema.SubscriptionAction.podcast_url]
 
 
 def create_user(db: Session, user: models.UserCreate) -> schema.User:
@@ -77,3 +78,12 @@ def get_session(db: Session, session: models.SessionToken) -> schema.Session:
 def delete_session(db: Session, session: models.SessionToken):
     with db.begin():
         db.delete(get_session(db, session))
+
+def get_subscriptions(db:Session,username:str,device_id:str=None):
+    # return db.get(schema.Device,(username,device_id)).subscriptions
+    subscriptions = select(*ColumnFilters.subscription)
+    if username is not None:
+        subscriptions = subscriptions.where(schema.SubscriptionAction.username == username)
+        if device_id is not None:
+            subscriptions = subscriptions.where(schema.SubscriptionAction.device_id == device_id)
+    return db.execute(subscriptions)

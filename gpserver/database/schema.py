@@ -30,11 +30,11 @@ class Device(Base):
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="devices")
-    actions: Mapped[list["Action"]] = relationship(back_populates="device")
+    actions: Mapped[list["EpisodeAction"]] = relationship(back_populates="device")
 
     caption: Mapped[Optional[str]]
     type: Mapped[DeviceType]
-    subscriptions: Mapped["Subscription"] = relationship(
+    subscriptions: Mapped["SubscriptionAction"] = relationship(
         back_populates="device")
 
 
@@ -47,40 +47,40 @@ class Session(Base):
     created: Mapped[datetime.datetime]
 
 
-class Podcast(Base):
-    __tablename__ = 'podcast'
-    url: Mapped[str] = mapped_column(primary_key=True)
-    episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
-    # favourites: Mapped[set["Favourite"]] = relationship(
-    #     back_populates="podcast")
+# class Podcast(Base):
+#     __tablename__ = 'podcast'
+#     url: Mapped[str] = mapped_column(primary_key=True)
+#     episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
+#     # favourites: Mapped[set["Favourite"]] = relationship(
+#     #     back_populates="podcast")
 
-    website: Mapped[str]
-    description: Mapped[str]
-    subscribers: Mapped[int]
-    title: Mapped[str]
-    author: Mapped[str]
-    logo_url: Mapped[Optional[str]]
+#     website: Mapped[str]
+#     description: Mapped[str]
+#     subscribers: Mapped[int]
+#     title: Mapped[str]
+#     author: Mapped[str]
+#     logo_url: Mapped[Optional[str]]
 
-    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
-
-
-class Episode(Base):
-    __tablename__ = 'episode'
-    url: Mapped[str] = mapped_column(primary_key=True)
-    podcast_url: Mapped[str] = mapped_column(
-        ForeignKey('podcast.url'), primary_key=True)
-    podcast: Mapped["Podcast"] = relationship(back_populates="episodes")
-
-    actions: Mapped[list["Action"]] = relationship(back_populates="episode")
-
-    description: Mapped[Optional[str]]
-    released: Mapped[datetime.datetime]
-    # website:Mapped[str] - this might be the same as the media url.
-    # how do clients use it?
-    # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
+#     subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
 
 
-class Subscription(Base):
+# class Episode(Base):
+#     __tablename__ = 'episode'
+#     url: Mapped[str] = mapped_column(primary_key=True)
+#     podcast_url: Mapped[str] = mapped_column(
+#         ForeignKey('podcast.url'), primary_key=True)
+#     podcast: Mapped["Podcast"] = relationship(back_populates="episodes")
+
+#     actions: Mapped[list["EpisodeAction"]] = relationship(back_populates="episode")
+
+#     description: Mapped[Optional[str]]
+#     released: Mapped[datetime.datetime]
+#     # website:Mapped[str] - this might be the same as the media url.
+#     # how do clients use it?
+#     # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
+
+
+class SubscriptionAction(Base):
     __tablename__ = 'subscription'
     username: Mapped[str] = mapped_column(primary_key=True)
     device_id: Mapped[str] = mapped_column(primary_key=True)
@@ -90,17 +90,19 @@ class Subscription(Base):
                              ['device.username', 'device.id']),
     )
 
-    podcast_url: Mapped[str] = mapped_column(
-        ForeignKey('podcast.url'), primary_key=True)
-    podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
+    podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
+    # podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
     timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    #todo move this somewhere else
+    type: Mapped[Enum('action',['add','remove'])]
+
 
 
 ActionType = Enum('action', ['download', 'play', 'delete', 'new'])
 
 
-class Action(Base):
+class EpisodeAction(Base):
     __tablename__ = 'action'
     username: Mapped[str] = mapped_column(primary_key=True)
     device_id: Mapped[str] = mapped_column(primary_key=True)
