@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from sqlalchemy import select
+from sqlalchemy import select, update
 from . import schema, models
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from const import hasher
+from collections.abc import Sequence, Mapping
 
 from sqlalchemy.orm import Session, defer
 
@@ -41,6 +42,14 @@ def get_all_user_models(db: Session) -> list[models.User]:
             ]
 
 
+def update_users(db: Session, users: Sequence[Mapping[str, Any]]):
+    with db.begin():
+        db.execute(
+            update(schema.User),
+            map(lambda user: user.__dict, users),
+        )
+
+
 def delete_user(db: Session, user: schema.User):
     with db.begin():
         db.delete(user)
@@ -61,7 +70,8 @@ def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema
 
 def get_session(db: Session, session: models.SessionToken) -> schema.Session:
     db.get(
-        schema.Session, {"key_hash": hasher.hash(session.key), "username": session.username}
+        schema.Session,
+        {"key_hash": hasher.hash(session.key), "username": session.username}
     )
 
 

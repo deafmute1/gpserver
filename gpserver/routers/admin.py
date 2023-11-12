@@ -36,12 +36,7 @@ def modify_user(
     users: UserList,
     db: Session = Depends(dependencies.get_db)
 ):
-    for user in users:  
-        old = operations.get_user(db, user.username)
-        if old is None: 
-            raise HTTPException(400, f"Existing user with username {user.username} does not exist")
-        operations.delete_user(db, old)
-        operations.create_user(**(dict(old) | dict(user)))
+    operations.update_users(db, users.__root__)
 
 @router.post("/users/delete")
 def delete_user(
