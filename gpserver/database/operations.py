@@ -82,11 +82,21 @@ def add_subscription_deltas(
     db:Session, username: str, deviceid: str, 
     deltas: models.SubscriptionDeltas, time: datetime.datetime
 ): 
-    with db.begin(): 
+    with db.begin():
+        shared_kwargs = {
+            "username": username,
+            "device_id": deviceid,
+            "time": time
+        }
         db.add_all(itertools.chain(
-            ((schema.SubscriptionAction(
-                    username: username, 
-                    deviceid: deviceid, 
-                    action: 
-                ) 
+            (
+                schema.SubscriptionAction(
+                    **shared_kwargs,podcast_url=e,action=schema.SubscriptionActionType.add
+                ) for e in deltas.add
+            ),
+            (
+                schema.SubscriptionAction(
+                    **shared_kwargs,podcast_url=e,action=schema.SubscriptionActionType.remove
+                ) for e in deltas.remove
+            )
         ))

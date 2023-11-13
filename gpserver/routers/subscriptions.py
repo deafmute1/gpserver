@@ -1,11 +1,13 @@
 import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from pydantic import BaseModel
 from const import formats
 import dependencies
 from database import operations
 from sqlalchemy.orm import Session
 from datetime import datetime
+import urllib.parse
 
 from . import models
 
@@ -54,7 +56,12 @@ def upload_device_subscriptions(
     # If clients want to determine if a device exists, you have to to a GET request on the same URL first and check for a the 404 status code (see above).
     pass
 
-@router_v2.post("/{username}/{deviceid}.json")
+class SubcriptionUploadReponse(BaseModel):
+    timestamp: float
+    update_urls: list[tuple(str, str)]
+
+
+@router_v2.post("/{username}/{deviceid}.json", response_model=SubcriptionUploadReponse)
 def upload_device_subscription_changes(
     username: str,
     deviceid: str,
@@ -62,8 +69,17 @@ def upload_device_subscription_changes(
     db: Session = Depends(dependencies.get_db)
 ):
     time = datetime.now()
-    
-
+    deltas_new = models.SubscriptionDeltas(
+        add=map(deltas.add, urllib.parse.quote),
+        remove=map(deltas.remove, urllib.parse.quote)
+    )
+    operations.add_subscription_deltas(db, username, deviceid, deltas_new, time)
+    return {
+        "timestamp" : time.timestamp(),
+        "update_urls" : [
+            e for e in zip(deltas_new.add + deltas.add, deltas_new.remove, deltas.remove) 
+        ]       
+    }
 
 @router_v2.post("/{username}/{_}.json")
 @router_v2.post("/{username}.json")
