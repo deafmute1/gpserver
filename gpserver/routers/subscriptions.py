@@ -28,7 +28,7 @@ def get_device_subscriptions(
     jsonp: Annotated[str, Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    subscriptions = operations.get_subscriptions(db, username, deviceid)
+    subscriptions = operations.get_subscriptions_deltas(db, username, deviceid)
 
 
 @router_v1.get("/{username}.{fmt}")
@@ -39,7 +39,7 @@ def get_subscriptions(
     jsonp: Annotated[str, Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    subscriptions = operations.get_subscriptions(db, username)
+    subscriptions = operations.get_subscriptions_deltas(db, username)
 
 
 @router_v1.put("/{username}/{deviceid}.{fmt}")

@@ -68,7 +68,7 @@ def delete_session(db: Session, session: models.SessionToken):
         db.delete(get_session(db, session))
 
 ### Subscription
-def get_subscriptions(db:Session,username:str,device_id:str=None):
+def get_subscriptions_deltas(db:Session,username:str,device_id:str=None):
     subscriptions = select(*ColumnFilters.subscription)
     if username is not None:
         subscriptions = subscriptions.where(schema.SubscriptionAction.username == username)
