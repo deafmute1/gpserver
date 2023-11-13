@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from .schema import DeviceType, ActionType
+from ..database.schema import DeviceType, ActionType
 import datetime
 
 class BaseModelORM(BaseModel):
@@ -21,7 +21,7 @@ class User(BaseModelORM):
 class UserCreate(User):
     password: str | bytes
 
-## 
+## Device
 class Device(BaseModelORM):
     device_id: str
     username: str

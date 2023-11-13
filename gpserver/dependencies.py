@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Annotated, Union
 from fastapi import Cookie, Depends, HTTPException
-from .database import connection, operations,models
+
+from .routers import models
+from .database import connection, operations
 from . import const
 from sqlalchemy.orm import Session
 
