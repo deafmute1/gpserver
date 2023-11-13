@@ -47,21 +47,21 @@ class Session(Base):
     created: Mapped[datetime.datetime]
 
 
-# class Podcast(Base):
-#     __tablename__ = 'podcast'
-#     url: Mapped[str] = mapped_column(primary_key=True)
-#     episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
-#     # favourites: Mapped[set["Favourite"]] = relationship(
-#     #     back_populates="podcast")
+class Podcast(Base):
+    __tablename__ = 'podcast'
+    url: Mapped[str] = mapped_column(primary_key=True)
+    episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
+    # favourites: Mapped[set["Favourite"]] = relationship(
+    #     back_populates="podcast")
 
-#     website: Mapped[str]
-#     description: Mapped[str]
-#     subscribers: Mapped[int]
-#     title: Mapped[str]
-#     author: Mapped[str]
-#     logo_url: Mapped[Optional[str]]
+    website: Mapped[str]
+    description: Mapped[str]
+    subscribers: Mapped[int]
+    title: Mapped[str]
+    author: Mapped[str]
+    logo_url: Mapped[Optional[str]]
 
-#     subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
+    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
 
 
 # class Episode(Base):
