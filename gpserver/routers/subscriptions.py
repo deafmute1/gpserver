@@ -1,13 +1,13 @@
 import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel
 from const import formats
 import dependencies
 from database import operations
 from sqlalchemy.orm import Session
+from datetime import datetime
 
-from gpserver.routers import models
+from . import models
 
 router_v1 = APIRouter(
     tags="subscriptions"
@@ -54,25 +54,15 @@ def upload_device_subscriptions(
     # If clients want to determine if a device exists, you have to to a GET request on the same URL first and check for a the 404 status code (see above).
     pass
 
-
-class SubscriptionDeltas(BaseModel):
-    add: list[str]
-    remove: list[str]
-
 @router_v2.post("/{username}/{deviceid}.json")
 def upload_device_subscription_changes(
     username: str,
     deviceid: str,
-    deltas: SubscriptionDeltas,
+    deltas: models.SubscriptionDeltas,
     db: Session = Depends(dependencies.get_db)
 ):
-    # need to read source code to figure out what actual data is being returned - weirdly formed and formatted in docs.
-    #format is:
-    content = {
-        'add':[],
-        'remove':[],
-        'timestamp':0
-    }
+    time = datetime.now()
+    
 
 
 @router_v2.post("/{username}/{_}.json")

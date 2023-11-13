@@ -1,14 +1,17 @@
-from pydantic import BaseModel
+from pydantic import AnyHttpUrl, Base64Bytes, BaseModel
 from ..database.schema import DeviceType, ActionType
 import datetime
 
 class BaseModelORM(BaseModel):
     model_config = { 'orm_mode' : True }
 
+class SubscriptionDeltas(BaseModel):
+    add: list[AnyHttpUrl]
+    remove: list[AnyHttpUrl]
 
 ## Session
 class SessionToken(BaseModelORM):
-    key: bytes
+    key: Base64Bytes
     username: str
 
 class SessionTokenTimestamp(SessionToken):

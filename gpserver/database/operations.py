@@ -1,3 +1,5 @@
+from datetime import datetime
+import itertools
 from sqlalchemy import Row, select, update
 
 from ..routers import models
@@ -75,3 +77,16 @@ def get_subscriptions_deltas(db:Session,username:str,device_id:str=None):
         if device_id is not None:
             subscriptions = subscriptions.where(schema.SubscriptionAction.device_id == device_id)
     return db.execute(subscriptions).all()
+
+def add_subscription_deltas(
+    db:Session, username: str, deviceid: str, 
+    deltas: models.SubscriptionDeltas, time: datetime.datetime
+): 
+    with db.begin(): 
+        db.add_all(itertools.chain(
+            ((schema.SubscriptionAction(
+                    username: username, 
+                    deviceid: deviceid, 
+                    action: 
+                ) 
+        ))
