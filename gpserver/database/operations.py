@@ -58,14 +58,14 @@ def delete_user(db: Session, user: schema.User):
 
 
 def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema.Session:
-    session: schema.Session(
+    session = schema.Session(
         key_hash=hasher.hash(session.key),
         username=session.username,
         created=session.created
     )
     with db.begin():
         db.add(session)
-    db.refresh()
+    db.refresh(session)
 
 
 def get_session(db: Session, session: models.SessionToken) -> schema.Session:
