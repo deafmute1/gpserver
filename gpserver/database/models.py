@@ -21,7 +21,7 @@ class User(BaseModelORM):
 class UserCreate(User):
     password: str | bytes
 
-## 
+## Device
 class Device(BaseModelORM):
     device_id: str
     username: str

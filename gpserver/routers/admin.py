@@ -43,7 +43,7 @@ def delete_user(
     db: Session = Depends(dependencies.get_db)
 ):
     for name in usernames: 
-        user = operations.get_user(name)
+        user = operations.get_user(db, name)
         if user is None: 
             raise HTTPException(409, f"User {name} does not exist")
         operations.delete_user(user)
@@ -53,14 +53,14 @@ def get_users(
     usernames: Annotated[[list[str]], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    users = [] 
-    for name in usernames: 
-        r = operations.get_user(db, name)
-        users.append({name: None} if r is None else r)
-    return users
+    return {
+        [operations.get_user_filtered(db, n) for n in usernames]
+    }
 
 @router.get("/users/all", response_model=UserList)
 def get_all_users(
     db: Session = Depends(dependencies.get_db)
 ):
-    operations.get_all_users()
+    return {
+        [models.User(**dict(e)) for e in operations.get_all_users_filtered(db)]
+    }
