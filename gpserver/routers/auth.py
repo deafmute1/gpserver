@@ -7,7 +7,9 @@ from const import hasher
 from sqlalchemy.orm import Session
 
 from datetime import datetime
-from ..database import operations, models
+
+from . import models
+from ..database import operations
 from .. import dependencies
 
 router = APIRouter(

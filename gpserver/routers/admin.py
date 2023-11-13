@@ -1,8 +1,10 @@
 from typing import Annotated
 
 from pydantic import BaseModel
+
+from gpserver.routers import models
 from .. import dependencies
-from database import models, operations
+from database import operations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

@@ -1,5 +1,7 @@
 from sqlalchemy import Row, select, update
-from . import schema, models
+
+from ..routers import models
+from . import schema
 from typing import Any, NamedTuple
 from const import hasher
 from collections.abc import Sequence, Mapping
@@ -66,8 +68,7 @@ def delete_session(db: Session, session: models.SessionToken):
         db.delete(get_session(db, session))
 
 ### Subscription
-def get_subscription_models(db:Session,username:str,device_id:str=None):
-    # return db.get(schema.Device,(username,device_id)).subscriptions
+def get_subscriptions(db:Session,username:str,device_id:str=None):
     subscriptions = select(*ColumnFilters.subscription)
     if username is not None:
         subscriptions = subscriptions.where(schema.SubscriptionAction.username == username)

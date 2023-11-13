@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 from const import formats
 import dependencies
-from database import models, operations
+from database import operations
 from sqlalchemy.orm import Session
+
+from gpserver.routers import models
 
 router_v1 = APIRouter(
     tags="subscriptions"
@@ -23,7 +25,7 @@ def get_device_subscriptions(
     username: str,
     deviceid: str,
     fmt: formats,
-    jsonp: Annotated[[str], Query()],
+    jsonp: Annotated[str, Query()],
     db: Session = Depends(dependencies.get_db)
 ):
     subscriptions = operations.get_subscriptions(db, username, deviceid)
@@ -34,7 +36,7 @@ def get_subscriptions(
     response: Response,
     username: str,
     fmt: formats,
-    jsonp: Annotated[[str], Query()],
+    jsonp: Annotated[str, Query()],
     db: Session = Depends(dependencies.get_db)
 ):
     subscriptions = operations.get_subscriptions(db, username)
@@ -56,7 +58,6 @@ def upload_device_subscriptions(
 class SubscriptionDeltas(BaseModel):
     add: list[str]
     remove: list[str]
-
 
 @router_v2.post("/{username}/{deviceid}.json")
 def upload_device_subscription_changes(
