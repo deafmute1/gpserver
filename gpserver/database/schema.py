@@ -26,14 +26,14 @@ DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
 
 class Device(Base):
     __tablename__ = 'device'
-    id: Mapped[str] = mapped_column(primary_key=True)
+    device_id: Mapped[str] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="devices")
     actions: Mapped[list["EpisodeAction"]] = relationship(back_populates="device")
 
     caption: Mapped[Optional[str]]
-    type: Mapped[DeviceType]
+    device_type: Mapped[DeviceType]
     subscriptions: Mapped["SubscriptionAction"] = relationship(
         back_populates="device")
 
