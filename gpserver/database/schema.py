@@ -80,6 +80,8 @@ class Podcast(Base):
 #     # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
 
 
+SubscriptionActionType = Enum('action',['add','remove'])
+
 class SubscriptionAction(Base):
     __tablename__ = 'subscription'
     username: Mapped[str] = mapped_column(primary_key=True)
@@ -93,13 +95,13 @@ class SubscriptionAction(Base):
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
     # podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
-    timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    time: Mapped[datetime.datetime] = mapped_column(primary_key=True)
     #todo move this somewhere else
-    type: Mapped[Enum('action',['add','remove'])]
+    action: Mapped[SubscriptionActionType]
 
 
 
-ActionType = Enum('action', ['download', 'play', 'delete', 'new'])
+EpisodeActionType = Enum('action', ['download', 'play', 'delete', 'new'])
 
 
 class EpisodeAction(Base):
@@ -120,7 +122,7 @@ class EpisodeAction(Base):
     )
 
     action: Mapped[ActionType] = mapped_column(primary_key=True)
-    timestamp: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    time: Mapped[datetime.datetime] = mapped_column(primary_key=True)
     started: Mapped[Optional[int]]
     position: Mapped[Optional[int]]
     total: Mapped[Optional[int]]
