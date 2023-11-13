@@ -79,8 +79,9 @@ class Podcast(Base):
 #     # how do clients use it?
 #     # mygpo_link:Mapped[str] - don't know how this works or if we're handling it
 
-
-SubscriptionActionType = Enum('action',['add','remove'])
+class SubscriptionActionType(Enum):
+    add = 1
+    remove = -1
 
 class SubscriptionAction(Base):
     __tablename__ = 'subscription'
