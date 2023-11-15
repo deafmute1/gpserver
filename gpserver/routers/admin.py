@@ -52,14 +52,10 @@ def get_users(
     usernames: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    return {
-        [operations.get_user_filtered(db, n) for n in usernames]
-    }
+    return [operations.get_user_filtered(db, n) for n in usernames]
 
 @router.get("/users/all", response_model=UserList)
 def get_all_users(
     db: Session = Depends(dependencies.get_db)
 ):
-    return {
-        [models.User(**dict(e)) for e in operations.get_all_users_filtered(db)]
-    }
+    return [models.User(**dict(e)) for e in operations.get_all_users_filtered(db)]

@@ -8,12 +8,12 @@ from typing import Any, NamedTuple
 from ..const import hasher
 from collections.abc import Sequence, Mapping
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session,InstrumentedAttribute
 
 # User
 class ColumnFilters(NamedTuple):
-    user: list[schema.User] = [schema.User.username]
-    subscription: list[schema.SubscriptionAction] = [schema.SubscriptionAction.podcast_url]
+    user = [schema.User.username,]
+    subscription = [schema.SubscriptionAction.podcast_url,]
 
 def create_user(db: Session, user: models.UserCreate) -> schema.User | None:
     user = schema.User(

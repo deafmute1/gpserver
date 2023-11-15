@@ -50,7 +50,7 @@ class Session(Base):
 class Podcast(Base):
     __tablename__ = 'podcast'
     url: Mapped[str] = mapped_column(primary_key=True)
-    episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
+    # episodes: Mapped[list["Episode"]] = relationship(back_populates="podcast")
     # favourites: Mapped[set["Favourite"]] = relationship(
     #     back_populates="podcast")
 
@@ -61,7 +61,7 @@ class Podcast(Base):
     author: Mapped[str]
     logo_url: Mapped[Optional[str]]
 
-    subscriptions: Mapped[set["Subscription"]] = relationship(back_populates="podcast")
+    subscriptions: Mapped[set["SubscriptionAction"]] = relationship(back_populates="podcast")
 
 
 # class Episode(Base):
@@ -90,11 +90,11 @@ class SubscriptionAction(Base):
     device: Mapped["Device"] = relationship(back_populates="subscriptions")
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
-                             ['device.username', 'device.id']),
+                             ['device.username', 'device.device_id']),
     )
 
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
-    # podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
+    podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
     time: Mapped[datetime] = mapped_column(primary_key=True)
     #todo move this somewhere else
@@ -111,15 +111,15 @@ class EpisodeAction(Base):
     device_id: Mapped[str] = mapped_column(primary_key=True)
     device: Mapped["Device"] = relationship(back_populates="actions")
 
-    podcast_url: Mapped[str] = mapped_column(primary_key=True)
-    episode_url: Mapped[str] = mapped_column(primary_key=True)
-    episode: Mapped["Episode"] = relationship(back_populates="actions")
+    podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
+    # episode_url: Mapped[str] = mapped_column(primary_key=True)
+    # episode: Mapped["Episode"] = relationship(back_populates="actions")
 
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
-                             ['device.username', 'device.id']),
-        ForeignKeyConstraint(['podcast_url', 'episode_url'], [
-                             'episode.podcast_url', 'episode.url'])
+                             ['device.username', 'device.device_id']),
+        # ForeignKeyConstraint(['podcast_url', 'episode_url'], [
+        #                      'episode.podcast_url', 'episode.url'])
     )
 
     action: Mapped[EpisodeActionType] = mapped_column(primary_key=True)

@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from .schema import Base
 
 from .. import const
 
@@ -8,3 +9,4 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(bind=engine)
+Base.metadata.create_all(engine)
