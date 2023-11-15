@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from gpserver.routers import models
 from .. import dependencies
-from database import operations
+from ..database import operations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -13,11 +13,8 @@ router = APIRouter(
     tags=["admin"]
 ) 
 
-class UserList(BaseModel): 
-    __root__ = list[models.User] | dict[str: None]
-
-class UserCreateList(BaseModel):
-    __root__ = list[models.UserCreate] 
+UserList = RootModel[list[models.User]|dict[str,None]]
+UserCreateList = RootModel[list[models.UserCreate]]
 
 @router.post("/users/create")
 def create_users(
@@ -41,7 +38,7 @@ def modify_user(
 
 @router.post("/users/delete")
 def delete_user(
-    usernames: Annotated[[list[str]], Query()],
+    usernames: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
     for name in usernames: 
@@ -52,7 +49,7 @@ def delete_user(
 
 @router.get("/users", response_model=UserList)
 def get_users(   
-    usernames: Annotated[[list[str]], Query()],
+    usernames: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
     return {

@@ -6,11 +6,11 @@ from gpserver import dependencies
 from gpserver.database.schema import DeviceType
 
 devices_router = APIRouter(
-    tags="devices"
+    tags=["devices"]
 )
 
 devices_updates_router = APIRouter(
-    tags="devices"
+    tags=["devices"]
 )
 
 class DeviceData(BaseModel):

@@ -5,7 +5,7 @@ from sqlalchemy import Row, select, update
 from ..routers import models
 from . import schema
 from typing import Any, NamedTuple
-from const import hasher
+from ..const import hasher
 from collections.abc import Sequence, Mapping
 
 from sqlalchemy.orm import Session
@@ -80,7 +80,7 @@ def get_subscriptions_deltas(db:Session,username:str,device_id:str=None):
 
 def add_subscription_deltas(
     db:Session, username: str, deviceid: str, 
-    deltas: models.SubscriptionDeltas, time: datetime.datetime
+    deltas: models.SubscriptionDeltas, time: datetime
 ): 
     with db.begin():
         shared_kwargs = {
@@ -100,3 +100,7 @@ def add_subscription_deltas(
                 ) for e in deltas.remove
             )
         ))
+
+def get_subscriptions(db:Session,username:str,device_id:str=None):
+    #SELECT SubscriptionAction.podcast_url FROM SubscriptionAction GROUP BY SubscriptionAction.podcast_url HAVING sum(SubscriptionAction.action)>0
+    pass

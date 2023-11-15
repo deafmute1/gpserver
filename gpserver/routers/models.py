@@ -1,6 +1,7 @@
 from pydantic import AnyHttpUrl, Base64Bytes, BaseModel
-from ..database.schema import DeviceType, ActionType
-import datetime
+from ..database.schema import DeviceType, EpisodeActionType
+from datetime import datetime
+
 
 class BaseModelORM(BaseModel):
     model_config = { 'orm_mode' : True }
@@ -15,7 +16,7 @@ class SessionToken(BaseModelORM):
     username: str
 
 class SessionTokenTimestamp(SessionToken):
-    created: datetime.datetime
+    created: datetime
 
 ## User
 class User(BaseModelORM):
@@ -45,13 +46,13 @@ class Episode(BaseModelORM):
     url: str
     podcast_url: str
     description: str
-    released: datetime.datetime
+    released: datetime
 
 class Subscription(BaseModelORM):
     username:str
     device_id: str
     podcast_url:str
-    timestamp: datetime.datetime
+    timestamp: datetime
 
 ## Action
 class Action(BaseModelORM):
@@ -59,8 +60,8 @@ class Action(BaseModelORM):
     device_id: str
     podcast_url: str
     episode_url: str
-    action: ActionType
-    timestamp: datetime.datetime
+    action: EpisodeActionType
+    timestamp: datetime
 
 class ActionPlay(Action):
     started: int

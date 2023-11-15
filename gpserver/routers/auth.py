@@ -3,7 +3,7 @@ import secrets
 from typing import Annotated, Union
 from fastapi import APIRouter, Depends, Cookie, HTTPException, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from const import hasher
+from ..const import hasher
 from sqlalchemy.orm import Session
 
 from datetime import datetime

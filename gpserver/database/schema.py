@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from enum import Enum
 from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
@@ -44,7 +44,7 @@ class Session(Base):
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="sessions")
-    created: Mapped[datetime.datetime]
+    created: Mapped[datetime]
 
 
 class Podcast(Base):
@@ -96,7 +96,7 @@ class SubscriptionAction(Base):
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
     # podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
-    time: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    time: Mapped[datetime] = mapped_column(primary_key=True)
     #todo move this somewhere else
     action: Mapped[SubscriptionActionType]
 
@@ -122,8 +122,8 @@ class EpisodeAction(Base):
                              'episode.podcast_url', 'episode.url'])
     )
 
-    action: Mapped[ActionType] = mapped_column(primary_key=True)
-    time: Mapped[datetime.datetime] = mapped_column(primary_key=True)
+    action: Mapped[EpisodeActionType] = mapped_column(primary_key=True)
+    time: Mapped[datetime] = mapped_column(primary_key=True)
     started: Mapped[Optional[int]]
     position: Mapped[Optional[int]]
     total: Mapped[Optional[int]]

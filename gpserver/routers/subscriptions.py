@@ -1,10 +1,10 @@
-import datetime
+from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
-from const import formats
-import dependencies
-from database import operations
+from ..const import formats
+from .. import dependencies
+from ..database import operations
 from sqlalchemy.orm import Session
 from datetime import datetime
 import urllib.parse
@@ -12,10 +12,10 @@ import urllib.parse
 from . import models
 
 router_v1 = APIRouter(
-    tags="subscriptions"
+    tags=["subscriptions"]
 )
 router_v2 = APIRouter(
-    tags="subscriptions"
+    tags=["subscriptions"]
 )
 
 # namespace issue with using 'format' - format is a reserved word.
@@ -58,7 +58,7 @@ def upload_device_subscriptions(
 
 class SubcriptionUploadReponse(BaseModel):
     timestamp: float
-    update_urls: list[tuple(str, str)]
+    update_urls: list[tuple[str, str]]
 
 
 @router_v2.post("/{username}/{deviceid}.json", response_model=SubcriptionUploadReponse)
@@ -85,7 +85,7 @@ def upload_device_subscription_changes(
 @router_v2.post("/{username}.json")
 def get_device_subscription_changes(
     username: str,
-    since: Annotated[datetime.datetime, Query()] = 0,
+    since: Annotated[datetime, Query()] = 0,
     db: Session = Depends(dependencies.get_db)
 ):
     # deviceid doesn't matter here. or most places
