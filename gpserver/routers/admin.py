@@ -11,23 +11,30 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(
     tags=["admin"]
-) 
+)
 
-UserList = RootModel[list[models.User]|dict[str,None]]
+UserList = RootModel[list[models.User | None]]
 UserCreateList = RootModel[list[models.UserCreate]]
+
 
 @router.post("/users/create")
 def create_users(
     users: UserCreateList,
     db: Session = Depends(dependencies.get_db),
-): 
-    for user in users: 
-        if operations.get_user_model(db, user.name) is not None: 
-            raise HTTPException(409, f"User with username {user.name} already exists")
-        operations.create_user(db, user)
+):
+    existing = []
+    with db.begin():
+        for user in users.root:
+            if operations.get_user(db, user.username) is None:
+                operations.create_user(db, user)
+            else:
+                existing.append(user.username)
+    if existing:
+        raise HTTPException(409, f"Users already exist: {existing}")
+
 
 @router.post(
-    "/users/modify", 
+    "/users/modify",
     summary="Merges (with priority) provided user data with existing user data matching username"
 )
 def modify_user(
@@ -36,26 +43,34 @@ def modify_user(
 ):
     operations.update_users(db, users.__root__)
 
+
 @router.post("/users/delete")
 def delete_user(
-    usernames: Annotated[list[str], Query()],
+    username: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    for name in usernames: 
-        user = operations.get_user(db, name)
-        if user is None: 
-            raise HTTPException(409, f"User {name} does not exist")
-        operations.delete_user(user)
+    nonexisting = []
+    with db.begin():
+        for name in username:
+            if (user := operations.get_user(db, name)) is None:
+                nonexisting.append(name)
+            else:
+                operations.delete_user(db, user)
+    if nonexisting:
+        raise HTTPException(409, f"Users {nonexisting} do not exist")
+
 
 @router.get("/users", response_model=UserList)
-def get_users(   
-    usernames: Annotated[list[str], Query()],
+def get_users(
+    username: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    return [operations.get_user_filtered(db, n) for n in usernames]
+    
+    return [operations.get_user_filtered(db, n) for n in username]
+
 
 @router.get("/users/all", response_model=UserList)
 def get_all_users(
     db: Session = Depends(dependencies.get_db)
 ):
-    return [models.User(**dict(e)) for e in operations.get_all_users_filtered(db)]
+    return operations.get_all_users_filtered(db)

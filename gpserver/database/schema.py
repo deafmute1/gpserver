@@ -40,7 +40,7 @@ class Device(Base):
 
 class Session(Base):
     __tablename__ = 'session'
-    key_hash: Mapped[str] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(
         ForeignKey('user.username'), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="sessions")

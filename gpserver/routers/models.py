@@ -1,4 +1,4 @@
-from pydantic import AnyHttpUrl, Base64Bytes, BaseModel
+from pydantic import AnyHttpUrl, Base64Str, BaseModel
 from ..database.schema import DeviceType, EpisodeActionType
 from datetime import datetime
 
@@ -12,7 +12,7 @@ class SubscriptionDeltas(BaseModel):
 
 ## Session
 class SessionToken(BaseModelORM):
-    key: Base64Bytes
+    key: str
     username: str
 
 class SessionTokenTimestamp(SessionToken):
@@ -20,10 +20,10 @@ class SessionTokenTimestamp(SessionToken):
 
 ## User
 class User(BaseModelORM):
-    username: bytes
+    username: str
 
 class UserCreate(User):
-    password: str | bytes
+    password: str
 
 ## Device
 class Device(BaseModelORM):

@@ -8,25 +8,28 @@ from typing import Any, NamedTuple
 from ..const import hasher
 from collections.abc import Sequence, Mapping
 
-from sqlalchemy.orm import Session,InstrumentedAttribute
+from sqlalchemy.orm import Session, InstrumentedAttribute
 
 # User
+
+
 class ColumnFilters(NamedTuple):
     user = [schema.User.username,]
     subscription = [schema.SubscriptionAction.podcast_url,]
+
 
 def create_user(db: Session, user: models.UserCreate) -> schema.User | None:
     user = schema.User(
         username=user.username,
         password_hash=hasher.hash(user.password),
     )
-    with db.begin():
-        db.add(user)
-    db.refresh(user)
+    db.add(user)
     return user
+
 
 def get_user(db: Session, username: str) -> schema.User | None:
     return db.get(schema.User, username)
+
 
 def get_user_filtered(db: Session, username: str):
     return db.execute(
@@ -34,54 +37,61 @@ def get_user_filtered(db: Session, username: str):
         .where(schema.User.username == username)
     ).one_or_none()
 
+
 def get_all_users_filtered(db: Session):
     return db.execute(select(*ColumnFilters.user)).all()
 
+
 def update_users(db: Session, users: Sequence[Mapping[str, Any]]):
-    with db.begin():
-        db.execute(
-            update(schema.User),
-            map(lambda user: dict(user), users)
-        )
+    db.execute(
+        update(schema.User),
+        map(lambda user: dict(user), users)
+    )
+
 
 def delete_user(db: Session, user: schema.User):
-    with db.begin():
-        db.delete(user)
+    db.delete(user)
 
-### Session
+# Session
+
+
 def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema.Session | None:
     session = schema.Session(
-        key_hash=hasher.hash(session.key),
+        key=session.key,
         username=session.username,
         created=session.created
     )
-    with db.begin():
-        db.add(session)
-    db.refresh(session)
+    db.add(session)
+
 
 def get_session(db: Session, session: models.SessionToken) -> schema.Session | None:
     return db.get(
         schema.Session,
-        {"key_hash": hasher.hash(session.key), "username": session.username}
+        {"key": session.key, "username": session.username}
     )
 
-def delete_session(db: Session, session: models.SessionToken):
-    with db.begin():
-        db.delete(get_session(db, session))
 
-### Subscription
-def get_subscriptions_deltas(db:Session,username:str,device_id:str=None):
+def delete_session(db: Session, session: models.SessionToken):
+    db.delete(get_session(db, session))
+
+# Subscription
+
+
+def get_subscriptions_deltas(db: Session, username: str, device_id: str = None):
     subscriptions = select(*ColumnFilters.subscription)
     if username is not None:
-        subscriptions = subscriptions.where(schema.SubscriptionAction.username == username)
+        subscriptions = subscriptions.where(
+            schema.SubscriptionAction.username == username)
         if device_id is not None:
-            subscriptions = subscriptions.where(schema.SubscriptionAction.device_id == device_id)
+            subscriptions = subscriptions.where(
+                schema.SubscriptionAction.device_id == device_id)
     return db.execute(subscriptions).all()
 
+
 def add_subscription_deltas(
-    db:Session, username: str, deviceid: str, 
+    db: Session, username: str, deviceid: str,
     deltas: models.SubscriptionDeltas, time: datetime
-): 
+):
     with db.begin():
         shared_kwargs = {
             "username": username,
@@ -91,16 +101,17 @@ def add_subscription_deltas(
         db.add_all(itertools.chain(
             (
                 schema.SubscriptionAction(
-                    **shared_kwargs,podcast_url=e,action=schema.SubscriptionActionType.add
+                    **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.add
                 ) for e in deltas.add
             ),
             (
                 schema.SubscriptionAction(
-                    **shared_kwargs,podcast_url=e,action=schema.SubscriptionActionType.remove
+                    **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.remove
                 ) for e in deltas.remove
             )
         ))
 
-def get_subscriptions(db:Session,username:str,device_id:str=None):
-    #SELECT SubscriptionAction.podcast_url FROM SubscriptionAction GROUP BY SubscriptionAction.podcast_url HAVING sum(SubscriptionAction.action)>0
+
+def get_subscriptions(db: Session, username: str, device_id: str = None):
+    # SELECT SubscriptionAction.podcast_url FROM SubscriptionAction GROUP BY SubscriptionAction.podcast_url HAVING sum(SubscriptionAction.action)>0
     pass
