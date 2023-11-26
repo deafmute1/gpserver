@@ -20,6 +20,7 @@ router = APIRouter(
 auth_scheme = HTTPBasic()
 
 
+@router.post("/{username}/login")
 @router.post("/{username}/login.json")
 def login(
     response: Response,
@@ -62,7 +63,7 @@ def login(
             content['User'] = False
     return content
 
-
+@router.post("/{username}/logout")
 @router.post("/{username}/logout.json")
 def logout(
     response: Response,
