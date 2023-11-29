@@ -13,7 +13,7 @@ router = APIRouter(
     tags=["admin"]
 )
 
-UserList = RootModel[list[models.User | None]]
+UserList = RootModel[list[models.User]]
 UserCreateList = RootModel[list[models.UserCreate]]
 
 
@@ -41,7 +41,12 @@ def modify_user(
     users: UserList,
     db: Session = Depends(dependencies.get_db)
 ):
-    operations.update_users(db, users.__root__)
+    raise HTTPException(501)
+    #set this up once some other modify endpoint exists as a template - users have a bit of weirdness & it would be nice to have a more standard modify endpoint to crib from
+    #what format will modifications be sent in? partial models with only the attributes to modify actually set? dicts in format {columnname:newvalue, ...}? 
+    with db.begin():
+        for user in users:
+            operations.update_user(db,user.username,)
 
 
 @router.post("/users/delete")
@@ -65,7 +70,6 @@ def get_users(
     username: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    
     return [operations.get_user_filtered(db, n) for n in username]
 
 

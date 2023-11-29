@@ -42,11 +42,13 @@ def get_all_users_filtered(db: Session):
     return db.execute(select(*ColumnFilters.user)).all()
 
 
-def update_users(db: Session, users: Sequence[Mapping[str, Any]]):
-    db.execute(
-        update(schema.User),
-        map(lambda user: dict(user), users)
-    )
+def update_user(db: Session, username: str, updates: Mapping[str, Any]):
+    user = get_user(db, username)
+    for col, val in updates:
+        if col == 'password':
+            col, val = 'password_hash', hasher.hash(val)
+        setattr(user, col, val)
+    return user
 
 
 def delete_user(db: Session, user: schema.User):
@@ -62,13 +64,12 @@ def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema
         created=session.created
     )
     db.add(session)
+    return session
 
 
 def get_session(db: Session, session: models.SessionToken) -> schema.Session | None:
-    return db.get(
-        schema.Session,
-        {"key": session.key, "username": session.username}
-    )
+    return db.get(schema.Session,
+                  {"key": session.key, "username": session.username})
 
 
 def delete_session(db: Session, session: models.SessionToken):
