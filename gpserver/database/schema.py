@@ -21,7 +21,12 @@ class User(Base):
     password_hash: Mapped[str]
 
 
-DeviceType = Enum('type', ['desktop', 'laptop', 'mobile', 'server', 'other'])
+class DeviceType(Enum):
+    desktop = 'desktop'
+    laptop = 'laptop'
+    mobile = 'mobile'
+    server = 'server'
+    other = 'other'
 
 
 class Device(Base):

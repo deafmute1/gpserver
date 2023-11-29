@@ -74,6 +74,24 @@ def get_session(db: Session, session: models.SessionToken) -> schema.Session | N
 def delete_session(db: Session, session: models.SessionToken):
     db.delete(get_session(db, session))
 
+# Device
+
+
+def create_device(db: Session, device: models.Device) -> schema.Device | None:
+    device = schema.Device(
+        device_id=device.id,
+        username=device.username,
+        caption=device.caption,
+        device_type=device.type,
+    )
+    db.add(device)
+    return device
+
+
+def get_device(db: Session, username: str, device_id: str):
+    return db.get(schema.Device,
+                  {"username": username, "device_id": device_id})
+
 # Subscription
 
 

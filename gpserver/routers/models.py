@@ -27,11 +27,12 @@ class UserCreate(User):
 
 ## Device
 class Device(BaseModelORM):
-    device_id: str
-    username: str
+    id: str
     caption: str
-    device_type: DeviceType
-    subscriptions: int
+    type: DeviceType
+
+class DeviceCreate(Device):
+    username: str
 
 class Podcast(BaseModelORM):
     url: str
