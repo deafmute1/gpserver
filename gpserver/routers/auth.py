@@ -72,7 +72,7 @@ def logout(
     sessionid: Annotated[Union[str, None], Cookie()] = None
 ):
     if sessionid is None:
-        raise HTTPException(400)
+        raise HTTPException(400,"Not logged in")
     with db.begin():
         if (session := operations.get_session(db,models.SessionToken(key=sessionid, username=username))) is not None:
             operations.delete_session(db, session)
