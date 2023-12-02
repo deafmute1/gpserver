@@ -1,6 +1,6 @@
 from datetime import datetime
 import itertools
-from sqlalchemy import Row, select, update
+from sqlalchemy import Row, select, update, func
 
 from ..routers import models
 from . import schema
@@ -78,7 +78,7 @@ def delete_session(db: Session, session: models.SessionToken):
 # Device
 
 
-def create_device(db: Session, device: models.Device) -> schema.Device | None:
+def create_device(db: Session, device: models.DeviceCreate) -> schema.Device | None:
     device = schema.Device(
         device_id=device.id,
         username=device.username,
@@ -96,7 +96,7 @@ def get_device(db: Session, username: str, device_id: str):
 # Subscription
 
 
-def get_subscriptions_deltas(db: Session, username: str, device_id: str = None):
+def get_subscriptions_deltas(db: Session, username: str = None, device_id: str = None):
     subscriptions = select(*ColumnFilters.subscription)
     if username is not None:
         subscriptions = subscriptions.where(
@@ -111,26 +111,36 @@ def add_subscription_deltas(
     db: Session, username: str, deviceid: str,
     deltas: models.SubscriptionDeltas, time: datetime
 ):
-    with db.begin():
-        shared_kwargs = {
-            "username": username,
-            "device_id": deviceid,
-            "time": time
-        }
-        db.add_all(itertools.chain(
-            (
-                schema.SubscriptionAction(
-                    **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.add
-                ) for e in deltas.add
-            ),
-            (
-                schema.SubscriptionAction(
-                    **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.remove
-                ) for e in deltas.remove
-            )
-        ))
+    shared_kwargs = {
+        "username": username,
+        "device_id": deviceid,
+        "time": time
+    }
+    db.add_all(itertools.chain(
+        (
+            schema.SubscriptionAction(
+                **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.add
+            ) for e in deltas.add
+        ),
+        (
+            schema.SubscriptionAction(
+                **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.remove
+            ) for e in deltas.remove
+        )
+    ))
 
 
-def get_subscriptions(db: Session, username: str, device_id: str = None):
-    # SELECT SubscriptionAction.podcast_url FROM SubscriptionAction GROUP BY SubscriptionAction.podcast_url HAVING sum(SubscriptionAction.action)>0
-    pass
+def get_subscriptions(db: Session, username: str = None, device_id: str = None):
+    subscriptions = select(*ColumnFilters.subscription)
+    if username is not None:
+        subscriptions = subscriptions.where(
+            schema.SubscriptionAction.username == username)
+        if device_id is not None:
+            subscriptions = subscriptions.where(
+                schema.SubscriptionAction.device_id == device_id)
+    return db.execute(
+        subscriptions
+        .group_by(schema.SubscriptionAction.podcast_url)
+        # need to change the way this works to be not jank. maybe look at a canonical way of implementing deltas in cs and copy that.
+        .having(func.sum(schema.SubscriptionAction.action) > 0)
+    ).all()

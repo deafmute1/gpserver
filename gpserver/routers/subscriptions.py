@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from ..const import formats
 from .. import dependencies
@@ -30,7 +30,7 @@ def get_device_subscriptions(
     jsonp: Annotated[str, Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    subscriptions = operations.get_subscriptions_deltas(db, username, deviceid)
+    subscriptions = operations.get_subscriptions(db, username, deviceid)
 
 
 @router_v1.get("/{username}.{fmt}")
@@ -46,6 +46,7 @@ def get_subscriptions(
 
 @router_v1.put("/{username}/{deviceid}.{fmt}")
 def upload_device_subscriptions(
+    request: Request,
     username: str,
     deviceid: str,
     fmt: formats,
@@ -54,7 +55,23 @@ def upload_device_subscriptions(
     # In case the device does not exist for the given user,
     # !!! it is automatically created.
     # If clients want to determine if a device exists, you have to to a GET request on the same URL first and check for a the 404 status code (see above).
-    pass
+    with db.begin():
+        if (device := operations.get_device(db, username, deviceid)) is None:
+                device = operations.create_device(
+                    db, models.DeviceCreate(
+                        id=deviceid,
+                        username=username,
+                        caption='',
+                        type='other'
+                    ))
+        match fmt:
+            case 'json':
+                #request.json()
+                #not sure what actual json content to expect here
+                return request.json()
+                operations.add_subscription_deltas(db,username,deviceid,)
+            case _:
+                raise HTTPException(415,"This subscription format is currently unsupported")
 
 class SubcriptionUploadReponse(BaseModel):
     timestamp: float

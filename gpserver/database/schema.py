@@ -12,7 +12,6 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = 'user'
     username: Mapped[str] = mapped_column(primary_key=True)
-    # TODO check if I can use set rather than Set - not sure it'll work
     devices: Mapped[set["Device"]] = relationship(back_populates="user")
     sessions: Mapped[list["Session"]] = relationship(back_populates="user")
 
@@ -102,7 +101,6 @@ class SubscriptionAction(Base):
     podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
     time: Mapped[datetime] = mapped_column(primary_key=True)
-    #todo move this somewhere else
     action: Mapped[SubscriptionActionType]
 
 
