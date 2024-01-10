@@ -117,6 +117,6 @@ def get_device_subscription_changes(
         ),
         remove = operations.get_subscriptions_deltas(
             db, username=username, since=since, action=schema.SubscriptionActionType.remove
-        )
+        ),
         timestamp = time
     )
