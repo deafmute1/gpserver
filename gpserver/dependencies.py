@@ -17,7 +17,7 @@ def get_db():
     finally:
         db.close()
 
-def auth_user(username: str, sessionid: CookieHint | None = None, db: Session = Depends(get_db)):
+def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db)):
     """
         requires db to be supplied if called directly, as Depends only runs on fastapi dep calls
     """

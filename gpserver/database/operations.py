@@ -101,24 +101,19 @@ def get_subscriptions_deltas(
     username: Optional[str] = None, device_id: Optional[str] = None, 
     since: Optional[datetime] = None, action: Optional[schema.SubscriptionActionType] = None
     ):
-    subscriptions = select(*ColumnFilters.subscription)
+    subscriptions = select(schema.SubscriptionAction.podcast_url) \
+        .distinct(schema.SubscriptionAction.podcast_url)
     if username is not None:
-        subscriptions = subscriptions.where(
-            schema.SubscriptionAction.username == username)
+        subscriptions = subscriptions.where(schema.SubscriptionAction.username == username) 
     if device_id is not None:
-        subscriptions = subscriptions.where(
-            schema.SubscriptionAction.device_id == device_id)
+        subscriptions = subscriptions.where(schema.SubscriptionAction.device_id == device_id)
     if since is not None: 
-        subscriptions = subscriptions.where(
-            schema.SubscriptionAction.time >= since
-        )
+        subscriptions = subscriptions.where(schema.SubscriptionAction.time > since)
     if action is not None: 
-        subscriptions = subscriptions.where( 
-            schema.SubscriptionAction.action == action
-        )
-    return db.execute(subscriptions).all()
+        subscriptions = subscriptions.where(schema.SubscriptionAction.action == action)
+    return db.execute(subscriptions).scalars().all()
 
-def get_newest_subscription_delta_timestamp(db: Session):
+def get_newest_subscription_delta_timestamp(db: Session) -> datetime:
     return db.execute(select(func.max(schema.SubscriptionAction.time))).scalar()
 
 def add_subscription_deltas(

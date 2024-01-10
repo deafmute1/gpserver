@@ -13,6 +13,7 @@ uvicorn = "^0.24.0.post1"
 itsdangerous = "^2.1.2"
 passlib = "^1.7.4"
 bcrypt = "^4.0.1"
+w3lib = "^2.1.2"
 
 [build-system]
 requires = ["poetry-core"]

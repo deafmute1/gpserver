@@ -101,7 +101,7 @@ class SubscriptionAction(Base):
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
     podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
-    time: Mapped[datetime] = mapped_column(primary_key=True, server_default=func.now())
+    time: Mapped[datetime] = mapped_column(default=func.now())
     action: Mapped[SubscriptionActionType]
 
 

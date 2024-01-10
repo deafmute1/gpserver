@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
+from w3lib import url
 
 from gpserver.database import schema
 from ..const import formats
@@ -9,7 +10,6 @@ from .. import dependencies
 from ..database import operations
 from sqlalchemy.orm import Session
 from datetime import datetime
-import urllib.parse
 
 from . import models
 
@@ -37,7 +37,7 @@ def get_subscriptions(
     response: Response,
     fmt: formats,
     jsonp: Annotated[str, Query()],
-    username: str = depends(dependencies.auth_user),
+    username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
     subscriptions = operations.get_subscriptions_deltas(db, username)
@@ -85,29 +85,29 @@ def upload_device_subscription_changes(
     db: Session = Depends(dependencies.get_db)
 ):
     deltas_new = models.SubscriptionDeltas(
-        add=map(deltas.add, urllib.parse.quote),
-        remove=map(deltas.remove, urllib.parse.quote)
+        add=list(map(url.canonicalize_url, deltas.add)),
+        remove=list(map(url.canonicalize_url, deltas.remove))
     )
     time = operations.add_subscription_deltas(db, username, deviceid, deltas_new)
     return {
-        "timestamp" : int(time.timestamp()),
+        "timestamp" : time.timestamp(),
         "update_urls" : [
-            e for e in zip(deltas_new.add + deltas.add, deltas_new.remove, deltas.remove) 
+            e for e in zip(deltas.add + deltas.remove, deltas_new.add + deltas_new.remove) 
         ]       
     }
 
 class TimeStampedSubscriptionDeltas(models.SubscriptionDeltas):
     timestamp: int 
 
-@router_v2.post("/{username}/{_}.json")
-@router_v2.post("/{username}.json")
+@router_v2.get("/{username}/{_}.json")
+@router_v2.get("/{username}.json")
 def get_device_subscription_changes(
     username: str = Depends(dependencies.auth_user),
     since: int = 0,
     db: Session = Depends(dependencies.get_db)
 ): 
     since = datetime.fromtimestamp(since)
-    time = operations.get_newest_subscription_delta_timestamp() 
+    time = operations.get_newest_subscription_delta_timestamp(db) 
     return TimeStampedSubscriptionDeltas(
         add = operations.get_subscriptions_deltas(
             db, username=username, since=since, action=schema.SubscriptionActionType.add
@@ -115,5 +115,5 @@ def get_device_subscription_changes(
         remove = operations.get_subscriptions_deltas(
             db, username=username, since=since, action=schema.SubscriptionActionType.remove
         ),
-        timestamp = time
+        timestamp = time.timestamp()
     )

@@ -7,9 +7,8 @@ class BaseModelORM(BaseModel):
     model_config = { 'orm_mode' : True }
 
 class SubscriptionDeltas(BaseModel):
-    add: list[AnyHttpUrl]
-    remove: list[AnyHttpUrl]
-
+    add: list[str]
+    remove: list[str]
 ## Session
 class SessionToken(BaseModelORM):
     key: str
