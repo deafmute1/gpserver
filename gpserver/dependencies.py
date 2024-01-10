@@ -17,18 +17,22 @@ def get_db():
     finally:
         db.close()
 
-def auth_user(username: str, sessionid: CookieHint, db: Session = Depends(get_db)):
-    '''if you call this directly, supply db session manually as depends will only be called if this is called as a dependency'''
+def auth_user(username: str, sessionid: CookieHint | None = None, db: Session = Depends(get_db)):
+    """
+        requires db to be supplied if called directly, as Depends only runs on fastapi dep calls
+    """
     if (session := operations.get_session(db,models.SessionToken(username=username,key=sessionid))) is not None:
         #check time        
         if (session.created + timedelta(hours=const.SESSIONID_TIMEOUT_HOURS)) > datetime.now():
             return username
         else:
             operations.delete_session(db,session)
-    
-    raise HTTPException(
-        401,
-        "sessionid does not authenticate this user; please login again", 
-        {"WWW-Authenticate": "Basic"}
-        )
+    elif sessionid is not None:
+        raise HTTPException(
+            400,
+            "sessionid provided but does not authenticate this user", 
+            {"WWW-Authenticate": "Basic"}
+            )
+    else: 
+        raise HTTPException(401, headers={"WWW-Authenticate": "Basic"})
 AuthHint = Annotated[str, Depends(auth_user)]

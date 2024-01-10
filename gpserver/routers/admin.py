@@ -13,18 +13,19 @@ router = APIRouter(
     tags=["admin"]
 )
 
-UserList = RootModel[list[models.User]]
-UserCreateList = RootModel[list[models.UserCreate]]
+class UserList(BaseModel): 
+    users: list[models.User]
+class UserCreateList(BaseModel): 
+    users: list[models.UserCreate]
 
-
-@router.post("/users/create")
+@router.post("/users/create/")
 def create_users(
     users: UserCreateList,
     db: Session = Depends(dependencies.get_db),
 ):
     existing = []
     with db.begin():
-        for user in users.root:
+        for user in users.users:
             if operations.get_user(db, user.username) is None:
                 operations.create_user(db, user)
             else:

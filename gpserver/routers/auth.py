@@ -1,7 +1,7 @@
 import base64
 import secrets
-from typing import Annotated, Union
-from fastapi import APIRouter, Depends, Cookie, HTTPException, Response
+from typing import Annotated, Optional, Union
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from ..const import hasher
 from sqlalchemy.orm import Session
@@ -17,19 +17,21 @@ router = APIRouter(
     tags=["auth"]
 )
 
-auth_scheme = HTTPBasic()
-
-
+async def optional_httpbasic(request: Request):
+    try: 
+        return await HTTPBasic()
+    except: 
+        return None
+    
 @router.post("/{username}/login")
 @router.post("/{username}/login.json")
 def login(
     response: Response,
     username: str,
-    credentials: Annotated[HTTPBasicCredentials, Depends(auth_scheme)],
+    credentials: Optional[HTTPBasicCredentials] = Depends(optional_httpbasic),
     db: Session = Depends(dependencies.get_db),
     sessionid: dependencies.CookieHint = None
 ):
-    #not yet implemented: 400 on wrong cookie
     content = {'Username': username}
     with db.begin():
         if (user := operations.get_user(db, username)) is not None:
@@ -45,14 +47,14 @@ def login(
                 #     else: 
                 #         raise err
                 content['Authenticated'] = True
-            else:
+            else: # new sessionid case
                 if not hasher.verify(credentials.password, user.password_hash):
                     raise HTTPException(
                         status_code=401,
                         detail="Invalid Credentials",
                         headers={"WWW-Authenticate": "Basic"}
                     )
-                sessionid = secrets.token_urlsafe() #add timestamp to this
+                sessionid = secrets.token_urlsafe() 
                 response.set_cookie("sessionid", sessionid)
                 operations.create_session(db, models.SessionTokenTimestamp(
                     key=sessionid,
@@ -60,7 +62,7 @@ def login(
                     created=datetime.now()))
                 content['Authenticated'] = True
         else:
-            content['User'] = False
+            content['Username'] = "User {username} does not exist"
     return content
 
 @router.post("/{username}/logout")
