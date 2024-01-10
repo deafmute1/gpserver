@@ -8,7 +8,7 @@ def setup_fastapi():
     app = FastAPI()
     app.include_router(auth.router,prefix="/api/2/auth") 
     app.include_router(admin.router,prefix="/api/admin")
-    app.include_router(subscriptions.router_v1,prefix="/subscriptions")
+    #app.include_router(subscriptions.router_v1,prefix="/subscriptions") 
     app.include_router(subscriptions.router_v2,prefix="/api/2/subscriptions")
     app.include_router(device.devices_router,prefix="/api/2/devices")
     app.include_router(device.devices_updates_router,prefix="/api/2/updates")

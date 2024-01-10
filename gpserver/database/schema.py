@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.sql import func
 from typing import Optional
 
 
@@ -100,7 +101,7 @@ class SubscriptionAction(Base):
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
     podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
 
-    time: Mapped[datetime] = mapped_column(primary_key=True)
+    time: Mapped[datetime] = mapped_column(primary_key=True, server_default=func.now())
     action: Mapped[SubscriptionActionType]
 
 

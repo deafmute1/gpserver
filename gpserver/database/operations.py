@@ -1,10 +1,10 @@
 from datetime import datetime
 import itertools
-from sqlalchemy import Row, select, update, func
+from sqlalchemy import Result, Row, insert, select, update, func
 
 from ..routers import models
 from . import schema
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Optional
 from ..const import hasher
 from collections.abc import Sequence, Mapping
 
@@ -96,27 +96,40 @@ def get_device(db: Session, username: str, device_id: str):
 # Subscription
 
 
-def get_subscriptions_deltas(db: Session, username: str = None, device_id: str = None):
+def get_subscriptions_deltas(
+    db: Session, 
+    username: Optional[str] = None, device_id: Optional[str] = None, 
+    since: Optional[datetime] = None, action: Optional[schema.SubscriptionActionType] = None
+    ):
     subscriptions = select(*ColumnFilters.subscription)
     if username is not None:
         subscriptions = subscriptions.where(
             schema.SubscriptionAction.username == username)
-        if device_id is not None:
-            subscriptions = subscriptions.where(
-                schema.SubscriptionAction.device_id == device_id)
+    if device_id is not None:
+        subscriptions = subscriptions.where(
+            schema.SubscriptionAction.device_id == device_id)
+    if since is not None: 
+        subscriptions = subscriptions.where(
+            schema.SubscriptionAction.time >= since
+        )
+    if action is not None: 
+        subscriptions = subscriptions.where( 
+            schema.SubscriptionAction.action == action
+        )
     return db.execute(subscriptions).all()
 
+def get_newest_subscription_delta_timestamp(db: Session):
+    return db.execute(select(func.max(schema.SubscriptionAction.time))).scalar()
 
 def add_subscription_deltas(
     db: Session, username: str, deviceid: str,
-    deltas: models.SubscriptionDeltas, time: datetime
-):
+    deltas: models.SubscriptionDeltas
+) -> datetime:
     shared_kwargs = {
         "username": username,
         "device_id": deviceid,
-        "time": time
     }
-    db.add_all(itertools.chain(
+    actions = list(itertools.chain(
         (
             schema.SubscriptionAction(
                 **shared_kwargs, podcast_url=e, action=schema.SubscriptionActionType.add
@@ -128,6 +141,9 @@ def add_subscription_deltas(
             ) for e in deltas.remove
         )
     ))
+    db.add_all(actions)
+    db.commit() # commit so we have retrievable timestamp
+    return actions[0].time 
 
 
 def get_subscriptions(db: Session, username: str = None, device_id: str = None):

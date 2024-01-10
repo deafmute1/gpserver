@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
+
+from gpserver.database import schema
 from ..const import formats
 from .. import dependencies
 from ..database import operations
@@ -85,28 +87,36 @@ def upload_device_subscription_changes(
     deltas: models.SubscriptionDeltas,
     db: Session = Depends(dependencies.get_db)
 ):
-    time = datetime.now()
     deltas_new = models.SubscriptionDeltas(
         add=map(deltas.add, urllib.parse.quote),
         remove=map(deltas.remove, urllib.parse.quote)
     )
-    operations.add_subscription_deltas(db, username, deviceid, deltas_new, time)
+    time = operations.add_subscription_deltas(db, username, deviceid, deltas_new)
     return {
-        "timestamp" : time.timestamp(),
+        "timestamp" : int(time.timestamp()),
         "update_urls" : [
             e for e in zip(deltas_new.add + deltas.add, deltas_new.remove, deltas.remove) 
         ]       
     }
 
+class TimeStampedSubscriptionDeltas(models.SubscriptionDeltas):
+    timestamp: int 
+
 @router_v2.post("/{username}/{_}.json")
 @router_v2.post("/{username}.json")
 def get_device_subscription_changes(
     username: str,
-    since: Annotated[datetime, Query()] = 0,
+    since: int = 0,
     db: Session = Depends(dependencies.get_db)
-):
-    # deviceid doesn't matter here. or most places
-    # notes from docs:
-    # 'since' value SHOULD be timestamp value from the previous call to this API endpoint. If there has been no previous call, the cliend SHOULD use 0.
-    # The response format is the same as the upload format: A dictionary with two keys “add” and “remove” where the value for each key is a list of URLs that should be added or removed. The timestamp SHOULD be stored by the client in order to provide it in the since parameter in the next request.
-    pass
+): 
+    since = datetime.fromtimestamp(since)
+    time = operations.get_newest_subscription_delta_timestamp() 
+    return TimeStampedSubscriptionDeltas(
+        add = operations.get_subscriptions_deltas(
+            db, username=username, since=since, action=schema.SubscriptionActionType.add
+        ),
+        remove = operations.get_subscriptions_deltas(
+            db, username=username, since=since, action=schema.SubscriptionActionType.remove
+        )
+        timestamp = time
+    )
