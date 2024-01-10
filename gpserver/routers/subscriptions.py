@@ -20,16 +20,13 @@ router_v2 = APIRouter(
     tags=["subscriptions"]
 )
 
-# namespace issue with using 'format' - format is a reserved word.
-
-
 @router_v1.get("/{username}/{deviceid}.{fmt}")
 def get_device_subscriptions(
     response: Response,
-    username: str,
     deviceid: str,
     fmt: formats,
     jsonp: Annotated[str, Query()],
+    username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
     subscriptions = operations.get_subscriptions(db, username, deviceid)
@@ -38,9 +35,9 @@ def get_device_subscriptions(
 @router_v1.get("/{username}.{fmt}")
 def get_subscriptions(
     response: Response,
-    username: str,
     fmt: formats,
     jsonp: Annotated[str, Query()],
+    username: str = depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
     subscriptions = operations.get_subscriptions_deltas(db, username)
@@ -49,9 +46,9 @@ def get_subscriptions(
 @router_v1.put("/{username}/{deviceid}.{fmt}")
 def upload_device_subscriptions(
     request: Request,
-    username: str,
     deviceid: str,
     fmt: formats,
+    username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
     # In case the device does not exist for the given user,
@@ -82,9 +79,9 @@ class SubcriptionUploadReponse(BaseModel):
 
 @router_v2.post("/{username}/{deviceid}.json", response_model=SubcriptionUploadReponse)
 def upload_device_subscription_changes(
-    username: str,
-    deviceid: str,
     deltas: models.SubscriptionDeltas,
+    deviceid: str,
+    username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
     deltas_new = models.SubscriptionDeltas(
@@ -105,7 +102,7 @@ class TimeStampedSubscriptionDeltas(models.SubscriptionDeltas):
 @router_v2.post("/{username}/{_}.json")
 @router_v2.post("/{username}.json")
 def get_device_subscription_changes(
-    username: str,
+    username: str = Depends(dependencies.auth_user),
     since: int = 0,
     db: Session = Depends(dependencies.get_db)
 ): 
