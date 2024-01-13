@@ -119,7 +119,7 @@ def get_newest_subscription_delta_timestamp(db: Session) -> datetime:
 def add_subscription_deltas(
     db: Session, username: str, deviceid: str,
     deltas: models.SubscriptionDeltas
-) -> datetime:
+):
     shared_kwargs = {
         "username": username,
         "device_id": deviceid,
@@ -137,9 +137,6 @@ def add_subscription_deltas(
         )
     ))
     db.add_all(actions)
-    db.commit() # commit so we have retrievable timestamp
-    return actions[0].time 
-
 
 def get_subscriptions(db: Session, username: str = None, device_id: str = None):
     subscriptions = select(*ColumnFilters.subscription)

@@ -1,23 +1,24 @@
+# stdlib
 from datetime import datetime
 from typing import Annotated
+
+# pip
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from w3lib import url
+from sqlalchemy.orm import Session
 
-from gpserver.database import schema
+#gpserver
+from gpserver.database import schema, operations
 from ..const import formats
 from .. import dependencies
-from ..database import operations
-from sqlalchemy.orm import Session
-from datetime import datetime
-
 from . import models
 
 router_v1 = APIRouter(
-    tags=["subscriptions"]
+    tags=["Subscriptions API"]
 )
 router_v2 = APIRouter(
-    tags=["subscriptions"]
+    tags=["Subscriptions API"]
 )
 
 @router_v1.get("/{username}/{deviceid}.{fmt}")
@@ -29,7 +30,7 @@ def get_device_subscriptions(
     username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
-    subscriptions = operations.get_subscriptions(db, username, deviceid)
+    raise NotImplementedError
 
 
 @router_v1.get("/{username}.{fmt}")
@@ -40,7 +41,7 @@ def get_subscriptions(
     username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
-    subscriptions = operations.get_subscriptions_deltas(db, username)
+   raise NotImplementedError 
 
 
 @router_v1.put("/{username}/{deviceid}.{fmt}")
@@ -72,13 +73,9 @@ def upload_device_subscriptions(
             case _:
                 raise HTTPException(415,"This subscription format is currently unsupported")
 
-class SubcriptionUploadReponse(BaseModel):
-    timestamp: float
-    update_urls: list[tuple[str, str]]
-
-
-@router_v2.post("/{username}/{deviceid}.json", response_model=SubcriptionUploadReponse)
-def upload_device_subscription_changes(
+@router_v2.post("/{username}/{deviceid}.json")
+@router_v2.post("/{username}/{deviceid}")
+def uplaod_subscription_actions(
     deltas: models.SubscriptionDeltas,
     deviceid: str,
     username: str = Depends(dependencies.auth_user),
@@ -88,32 +85,31 @@ def upload_device_subscription_changes(
         add=list(map(url.canonicalize_url, deltas.add)),
         remove=list(map(url.canonicalize_url, deltas.remove))
     )
-    time = operations.add_subscription_deltas(db, username, deviceid, deltas_new)
-    return {
-        "timestamp" : time.timestamp(),
-        "update_urls" : [
-            e for e in zip(deltas.add + deltas.remove, deltas_new.add + deltas_new.remove) 
-        ]       
-    }
+    with db.begin():
+        operations.add_subscription_deltas(db, username, deviceid, deltas_new)
+        time = operations.get_newest_subscription_delta_time(db)
+    return models.ActionUploadReponse(
+        timestamp=time.timestamp(),
+        update_urls=[e for e in zip(deltas.add + deltas.remove, deltas_new.add + deltas_new.remove)]       
+    )
 
 class TimeStampedSubscriptionDeltas(models.SubscriptionDeltas):
     timestamp: int 
 
 @router_v2.get("/{username}/{_}.json")
 @router_v2.get("/{username}.json")
-def get_device_subscription_changes(
+def get_subscription_actions(
     username: str = Depends(dependencies.auth_user),
     since: int = 0,
     db: Session = Depends(dependencies.get_db)
 ): 
     since = datetime.fromtimestamp(since)
-    time = operations.get_newest_subscription_delta_timestamp(db) 
-    return TimeStampedSubscriptionDeltas(
+    with db.begin():
+        time = operations.get_newest_subscription_delta_time(db) 
         add = operations.get_subscriptions_deltas(
-            db, username=username, since=since, action=schema.SubscriptionActionType.add
-        ),
+                db, username=username, since=since, action=schema.SubscriptionActionType.add
+            )
         remove = operations.get_subscriptions_deltas(
-            db, username=username, since=since, action=schema.SubscriptionActionType.remove
-        ),
-        timestamp = time.timestamp()
-    )
+                db, username=username, since=since, action=schema.SubscriptionActionType.remove
+            )
+    return TimeStampedSubscriptionDeltas(add=add, remove=remove, timestamp=time.timestamp())

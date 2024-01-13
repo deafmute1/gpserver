@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 router = APIRouter(
-    tags=["admin"]
+    tags=["Admin API"]
 )
 
 class UserList(BaseModel): 
@@ -42,7 +42,8 @@ def modify_user(
     users: UserList,
     db: Session = Depends(dependencies.get_db)
 ):
-    raise HTTPException(501)
+    # TODO
+    raise NotImplementedError 
     #set this up once some other modify endpoint exists as a template - users have a bit of weirdness & it would be nice to have a more standard modify endpoint to crib from
     #what format will modifications be sent in? partial models with only the attributes to modify actually set? dicts in format {columnname:newvalue, ...}? 
     with db.begin():
@@ -71,11 +72,13 @@ def get_users(
     username: Annotated[list[str], Query()],
     db: Session = Depends(dependencies.get_db)
 ):
-    return [operations.get_user_filtered(db, n) for n in username]
+    with db.begin():
+        return [operations.get_user_filtered(db, n) for n in username]
 
 
 @router.get("/users/all", response_model=UserList)
 def get_all_users(
     db: Session = Depends(dependencies.get_db)
 ):
-    return operations.get_all_users_filtered(db)
+    with db.begin():
+        return operations.get_all_users_filtered(db)
