@@ -4,13 +4,12 @@ from typing import Annotated
 
 # pip
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel
 from w3lib import url
 from sqlalchemy.orm import Session
 
 #gpserver
 from gpserver.database import schema, operations
-from ..const import formats
+from ..const import formatsLiteral
 from .. import dependencies
 from . import models
 
@@ -21,11 +20,15 @@ router_v2 = APIRouter(
     tags=["Subscriptions API"]
 )
 
+@router_v1.get("/test")
+def test(astr: str):
+    return ""
+
 @router_v1.get("/{username}/{deviceid}.{fmt}")
 def get_device_subscriptions(
     response: Response,
     deviceid: str,
-    fmt: formats,
+    fmt: formatsLiteral,
     jsonp: Annotated[str, Query()],
     username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
@@ -36,7 +39,7 @@ def get_device_subscriptions(
 @router_v1.get("/{username}.{fmt}")
 def get_subscriptions(
     response: Response,
-    fmt: formats,
+    fmt: formatsLiteral,
     jsonp: Annotated[str, Query()],
     username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
@@ -48,7 +51,7 @@ def get_subscriptions(
 def upload_device_subscriptions(
     request: Request,
     deviceid: str,
-    fmt: formats,
+    fmt: formatsLiteral,
     username: str = Depends(dependencies.auth_user),
     db: Session = Depends(dependencies.get_db)
 ):
@@ -69,13 +72,12 @@ def upload_device_subscriptions(
                 #request.json()
                 #not sure what actual json content to expect here
                 return request.json()
-                operations.add_subscription_deltas(db,username,deviceid,)
             case _:
                 raise HTTPException(415,"This subscription format is currently unsupported")
 
 @router_v2.post("/{username}/{deviceid}.json")
 @router_v2.post("/{username}/{deviceid}")
-def uplaod_subscription_actions(
+def upload_subscription_actions(
     deltas: models.SubscriptionDeltas,
     deviceid: str,
     username: str = Depends(dependencies.auth_user),
@@ -88,13 +90,12 @@ def uplaod_subscription_actions(
     with db.begin():
         operations.add_subscription_deltas(db, username, deviceid, deltas_new)
         time = operations.get_newest_subscription_delta_time(db)
-    return models.ActionUploadReponse(
-        timestamp=time.timestamp(),
-        update_urls=[e for e in zip(deltas.add + deltas.remove, deltas_new.add + deltas_new.remove)]       
+    return models.ChangeUploadReponse(
+        timestamp = time.timestamp(),
+        update_urls = [
+            e for e in zip(deltas.add + deltas.remove, deltas_new.add + deltas_new.remove, strict=True)
+        ]       
     )
-
-class TimeStampedSubscriptionDeltas(models.SubscriptionDeltas):
-    timestamp: int 
 
 @router_v2.get("/{username}/{_}.json")
 @router_v2.get("/{username}.json")
@@ -112,4 +113,4 @@ def get_subscription_actions(
         remove = operations.get_subscriptions_deltas(
                 db, username=username, since=since, action=schema.SubscriptionActionType.remove
             )
-    return TimeStampedSubscriptionDeltas(add=add, remove=remove, timestamp=time.timestamp())
+    return models.TimeStampedSubscriptionDeltas(add=add, remove=remove, timestamp=time.timestamp())

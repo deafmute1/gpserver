@@ -1,18 +1,16 @@
 from datetime import datetime
 import itertools
-from sqlalchemy import Result, Row, insert, select, update, func
+from typing import Any, NamedTuple, Optional
+from collections.abc import Mapping
+
+from sqlalchemy import select, func
+from sqlalchemy.orm import Session
 
 from ..routers import models
 from . import schema
-from typing import Any, NamedTuple, Optional
 from ..const import hasher
-from collections.abc import Sequence, Mapping
 
-from sqlalchemy.orm import Session, InstrumentedAttribute
-
-# User
-
-
+## User
 class ColumnFilters(NamedTuple):
     user = [schema.User.username,]
     subscription = [schema.SubscriptionAction.podcast_url,]
@@ -54,9 +52,8 @@ def update_user(db: Session, username: str, updates: Mapping[str, Any]):
 def delete_user(db: Session, user: schema.User):
     db.delete(user)
 
-# Session
 
-
+## Session
 def create_session(db: Session, session: models.SessionTokenTimestamp) -> schema.Session | None:
     session = schema.Session(
         key=session.key,
@@ -75,9 +72,8 @@ def get_session(db: Session, session: models.SessionToken) -> schema.Session | N
 def delete_session(db: Session, session: models.SessionToken):
     db.delete(get_session(db, session))
 
-# Device
 
-
+## Device
 def create_device(db: Session, device: models.DeviceCreate) -> schema.Device | None:
     device = schema.Device(
         device_id=device.id,
@@ -113,7 +109,7 @@ def get_subscriptions_deltas(
         subscriptions = subscriptions.where(schema.SubscriptionAction.action == action)
     return db.execute(subscriptions).scalars().all()
 
-def get_newest_subscription_delta_timestamp(db: Session) -> datetime:
+def get_newest_subscription_delta_time(db: Session) -> datetime:
     return db.execute(select(func.max(schema.SubscriptionAction.time))).scalar()
 
 def add_subscription_deltas(

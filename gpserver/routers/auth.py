@@ -1,20 +1,18 @@
-import base64
 import secrets
 from typing import Annotated, Optional, Union
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Cookie, HTTPException, Request, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from ..const import hasher
 from sqlalchemy.orm import Session
-
-from datetime import datetime
-import time 
 
 from . import models
 from ..database import operations
 from .. import dependencies
+from ..const import hasher
 
 router = APIRouter(
-    tags=["auth"]
+    tags=["Authentication API"]
 )
 
 async def optional_httpbasic(request: Request):

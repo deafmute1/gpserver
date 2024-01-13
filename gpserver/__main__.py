@@ -1,8 +1,6 @@
-import uvicorn
 from fastapi import FastAPI
-from .routers import auth,admin,subscriptions,device,alive
-
-
+import uvicorn
+from gpserver.routers import auth,admin,alive,episodes,subscriptions
 
 def setup_fastapi(): 
     app = FastAPI()
@@ -10,8 +8,9 @@ def setup_fastapi():
     app.include_router(admin.router,prefix="/api/admin")
     #app.include_router(subscriptions.router_v1,prefix="/subscriptions") 
     app.include_router(subscriptions.router_v2,prefix="/api/2/subscriptions")
-    app.include_router(device.devices_router,prefix="/api/2/devices")
-    app.include_router(device.devices_updates_router,prefix="/api/2/updates")
+    #app.include_router(device.devices_router,prefix="/api/2/devices")
+    #app.include_router(device.devices_updates_router,prefix="/api/2/updates")
+    app.include_router(episodes.router,prefix="/api/2/episodes")
     app.include_router(alive.router)
     
     return app
@@ -21,8 +20,8 @@ def start_server(app: FastAPI):
     server = uvicorn.Server(config)
     server.run()
 
-def main():
+def run():
     start_server(setup_fastapi())
-
+    
 if __name__ == "__main__":
-    main()
+    run()

@@ -20,4 +20,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-gpserver = 'gpserver.main:main'
+gpserver = 'gpserver.__main__:run'

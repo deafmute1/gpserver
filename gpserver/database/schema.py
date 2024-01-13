@@ -1,10 +1,12 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
+
 from sqlalchemy import ForeignKey, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.sql import func
-from typing import Optional
 
+from .. import const
 
 class Base(DeclarativeBase):
     pass
@@ -105,19 +107,16 @@ class SubscriptionAction(Base):
     action: Mapped[SubscriptionActionType]
 
 
-
-EpisodeActionType = Enum('action', ['download', 'play', 'delete', 'new'])
-
-
 class EpisodeAction(Base):
     __tablename__ = 'action'
     username: Mapped[str] = mapped_column(primary_key=True)
-    device_id: Mapped[str] = mapped_column(primary_key=True)
+    device_id: Mapped[str] = mapped_column()
     device: Mapped["Device"] = relationship(back_populates="actions")
 
     podcast_url: Mapped[str] = mapped_column(ForeignKey('podcast.url'),primary_key=True)
-    # episode_url: Mapped[str] = mapped_column(primary_key=True)
-    # episode: Mapped["Episode"] = relationship(back_populates="actions")
+    podcast: Mapped["Podcast"] = relationship(back_populates="subscriptions")
+    episode_url: Mapped[str] = mapped_column(primary_key=True)
+    #episode: Mapped["Episode"] = relationship(back_populates="actions")
 
     __table_args__ = (
         ForeignKeyConstraint(['username', 'device_id'],
@@ -126,11 +125,11 @@ class EpisodeAction(Base):
         #                      'episode.podcast_url', 'episode.url'])
     )
 
-    action: Mapped[EpisodeActionType] = mapped_column(primary_key=True)
+    action: Mapped[const.episodeActionsLiteral] = mapped_column(primary_key=True)
     time: Mapped[datetime] = mapped_column(primary_key=True)
-    started: Mapped[Optional[int]]
-    position: Mapped[Optional[int]]
-    total: Mapped[Optional[int]]
+    started: Mapped[Optional[int]] = mapped_column()
+    position: Mapped[Optional[int]] = mapped_column()
+    total: Mapped[Optional[int]] = mapped_column()
 
 
 # class Favourite(Base): moved to boolean value in subscriptions

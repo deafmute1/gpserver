@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .schema import Base
 
+from .schema import Base
 from .. import const
 
 engine = create_engine(
